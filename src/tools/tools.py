@@ -1,9 +1,10 @@
 import time
 import subprocess
 from pywinauto import Application
+from typing import Optional, Annotated
 
 
-def open_camera():
+def open_camera() -> Annotated[Optional[str], "Camera app opened successfully." ]:
     """
     Open the Camera app.
     """
@@ -11,8 +12,10 @@ def open_camera():
         subprocess.run("start microsoft.windows.camera:", shell=True, check=True)
         print("Camera app opened successfully.")
         time.sleep(3)
+        return "Camera app opened successfully."
     except subprocess.CalledProcessError as e:
         print(f"Failed to open the Camera app. Error: {e}")
+        return f"Failed to open the Camera app. Error: {e}"
 
 
 def minimize_camera():
