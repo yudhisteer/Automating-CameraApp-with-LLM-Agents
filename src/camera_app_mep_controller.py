@@ -36,7 +36,7 @@ class MEPControllerCameraApp:
             button = window.child_window(
                 title="Windows Studio Effects",
                 control_type="Button",
-                class_name="ToggleButton"
+                class_name="ToggleButton",
             )
             if button.exists() and button.is_enabled():
                 button.click_input()
@@ -45,16 +45,16 @@ class MEPControllerCameraApp:
             else:
                 print("'Windows Studio Effects' button is not accessible.")
         except Exception as e:
-            print(f"Failed to interact with 'Windows Studio Effects' button. Error: {e}")
+            print(
+                f"Failed to interact with 'Windows Studio Effects' button. Error: {e}"
+            )
 
     def toggle_feature(self, feature_name, desired_state, class_name="ToggleSwitch"):
         try:
             app = Application(backend="uia").connect(title_re="Camera")
             window = app.window(title_re="Camera")
             toggle_button = window.child_window(
-                title=feature_name,
-                control_type="Button",
-                class_name=class_name
+                title=feature_name, control_type="Button", class_name=class_name
             )
             if not toggle_button.exists() or not toggle_button.is_enabled():
                 print(f"{feature_name} toggle is not accessible.")
@@ -80,8 +80,7 @@ class MEPControllerCameraApp:
             app = Application(backend="uia").connect(title_re="Camera")
             window = app.window(title_re="Camera")
             radio_button = window.child_window(
-                title=radio_name,
-                control_type="RadioButton"
+                title=radio_name, control_type="RadioButton"
             )
             if radio_button.exists() and not radio_button.is_selected():
                 radio_button.click_input()
@@ -91,7 +90,14 @@ class MEPControllerCameraApp:
         except Exception as e:
             print(f"Failed to select '{radio_name}' radio button. Error: {e}")
 
-    def toggle_features(self, auto_framing, portrait_light, eye_contact, background_effect, creative_filter):
+    def toggle_features(
+        self,
+        auto_framing,
+        portrait_light,
+        eye_contact,
+        background_effect,
+        creative_filter,
+    ):
         try:
             self.click_windows_studio_effects()
 
@@ -115,7 +121,9 @@ class MEPControllerCameraApp:
                         self.select_radio_button("Teleprompter")
 
             if background_effect:
-                desired_state = self._background_effect_map.get(background_effect.upper(), 0)
+                desired_state = self._background_effect_map.get(
+                    background_effect.upper(), 0
+                )
                 if desired_state == 0:
                     self.toggle_feature("Background effects", 0)
                 elif desired_state in [5, 6]:
@@ -126,7 +134,9 @@ class MEPControllerCameraApp:
                         self.select_radio_button("Portrait blur")
 
             if creative_filter:
-                desired_state = self._creative_filter_map.get(creative_filter.upper(), 0)
+                desired_state = self._creative_filter_map.get(
+                    creative_filter.upper(), 0
+                )
                 if desired_state == 0:
                     self.toggle_feature("Creative filters", 0)
                 elif desired_state in [7, 8, 9]:
@@ -143,7 +153,9 @@ class MEPControllerCameraApp:
 
 def main():
     if len(sys.argv) != 6:
-        print("Usage: python camera_app_mep_controller.py <auto_framing> <portrait_light> <eye_contact> <background_effect> <creative_filter>")
+        print(
+            "Usage: python camera_app_mep_controller.py <auto_framing> <portrait_light> <eye_contact> <background_effect> <creative_filter>"
+        )
         print("Example: python camera_app_mep_controller.py ON OFF STD STD ILU")
         return
 
@@ -155,7 +167,9 @@ def main():
 
     controller = MEPControllerCameraApp()
     controller.open_camera()
-    controller.toggle_features(auto_framing, portrait_light, eye_contact, background_effect, creative_filter)
+    controller.toggle_features(
+        auto_framing, portrait_light, eye_contact, background_effect, creative_filter
+    )
     controller.close_camera()
 
 
