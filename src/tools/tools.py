@@ -18,7 +18,7 @@ def open_camera() -> Annotated[Optional[str], "Camera app opened successfully." 
         return f"Failed to open the Camera app. Error: {e}"
 
 
-def minimize_camera():
+def minimize_camera() -> Annotated[Optional[str], "Camera app minimized successfully."]:
     """
     Minimize the Camera app.
     """
@@ -31,13 +31,15 @@ def minimize_camera():
         if minimize_button.exists() and minimize_button.is_enabled():
             minimize_button.click_input()
             print("Camera app minimized successfully.")
+            return "Camera app minimized successfully."
         else:
             print("Minimize button is not accessible.")
+            return "Minimize button is not accessible."
     except Exception as e:
         print(f"Failed to minimize Camera app. Error: {e}")
+        return f"Failed to minimize Camera app. Error: {e}"
 
-
-def restore_camera():
+def restore_camera() -> Annotated[Optional[str], "Camera app restored successfully."]:
     """
     Restore the Camera app.
     """
@@ -49,13 +51,15 @@ def restore_camera():
             window.restore()
             window.set_focus()
             print("Camera app restored successfully.")
+            return "Camera app restored successfully."
         else:
             print("Camera window not found.")
+            return "Camera window not found."
     except Exception as e:
         print(f"Failed to restore Camera app. Error: {e}")
+        return f"Failed to restore Camera app. Error: {e}"
 
-
-def click_windows_studio_effects():
+def click_windows_studio_effects() -> Annotated[Optional[str], "'Windows Studio Effects' button clicked."]:
     """
     Click the 'Windows Studio Effects' button if it's not already expanded.
     """
@@ -73,17 +77,19 @@ def click_windows_studio_effects():
                 button.click_input()
                 time.sleep(1)
                 print("'Windows Studio Effects' button clicked.")
+                return "'Windows Studio Effects' button clicked."
             else:
                 print("'Windows Studio Effects' panel is already open.")
+                return "'Windows Studio Effects' panel is already open."
         else:
             print("'Windows Studio Effects' button is not accessible.")
-            return None
+            return "'Windows Studio Effects' button is not accessible."
     except Exception as e:
         print(f"Failed to interact with 'Windows Studio Effects' button. Error: {e}")
-        return None
+        return f"Failed to interact with 'Windows Studio Effects' button. Error: {e}"
 
 
-def check_background_effects_state() -> int:    
+def check_background_effects_state() -> Annotated[Optional[int], "The state of the toggle button (0 for off, 1 for on)."]:
     """
     Check the state of the background effects toggle button.
     Returns:
@@ -158,7 +164,7 @@ def set_blur_type(blur_type: str):
         print(f"Failed to set blur type. Error: {e}")
 
 
-def set_background_effects(desired_state: bool = None):
+def set_background_effects(desired_state: bool = None) -> Annotated[Optional[str], "Background effects toggled successfully."]:
     """
     Toggle background effects on/off or set to a specific state.
 
@@ -195,12 +201,14 @@ def set_background_effects(desired_state: bool = None):
                 print(
                     f"Background effects already in desired state: {'ON' if current_state else 'OFF'}"
                 )
+            return f"Background effects toggled successfully."
         else:
             print("Background effects button not found")
+            return "Background effects button not found"
 
     except Exception as e:
         print(f"Failed to set background effects. Error: {e}")
-
+        return f"Failed to set background effects. Error: {e}"
 
 def check_automatic_framing_state() -> int:
     """
