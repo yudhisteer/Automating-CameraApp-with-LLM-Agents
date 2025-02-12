@@ -7,6 +7,7 @@ from src.utils.agent_utils import (
     interpret_query,
     determine_agents,
     process_sequential_chats,
+    run_workflow,
 )
 
 
@@ -148,19 +149,10 @@ if __name__ == "__main__":
     #process_sequential_chats(interpreted_query, agent_list, agent_functions, user_proxy_agent)
 
 
-    user_proxy_agent.initiate_chat(
-        open_camera_agent,
-        message="open the camera",
-        max_turns=2,
-    )
-
-    for i in range(iterations):
-        print(f"Iteration {i+1}:")
-        process_sequential_chats(interpreted_query, agent_list, agent_functions, user_proxy_agent)
-
-
-    user_proxy_agent.initiate_chat(
-        close_camera_agent,
-        message="close the camera",
-        max_turns=2,
+    run_workflow(
+        query=interpreted_query,
+        iterations=iterations,
+        agent_list=agent_list,
+        agent_functions=agent_functions,
+        user_proxy_agent=user_proxy_agent
     )

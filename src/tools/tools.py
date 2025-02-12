@@ -45,6 +45,7 @@ def minimize_camera() -> Annotated[Optional[str], "Camera app minimized successf
         )
         if minimize_button.exists() and minimize_button.is_enabled():
             minimize_button.click_input()
+            time.sleep(1)
             print("Camera app minimized successfully.")
             return "Camera app minimized successfully."
         else:
@@ -66,6 +67,7 @@ def restore_camera() -> Annotated[Optional[str], "Camera app restored successful
         if window.exists():
             window.restore()
             window.set_focus()
+            time.sleep(1)
             print("Camera app restored successfully.")
             return "Camera app restored successfully."
         else:

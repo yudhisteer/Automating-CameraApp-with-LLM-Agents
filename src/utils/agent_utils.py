@@ -1,6 +1,7 @@
 from autogen import ConversableAgent, register_function
 from autogen import AssistantAgent, UserProxyAgent
 from typing import Tuple
+from src.tools.tools import open_camera, close_camera
 
 
 def register_agent_functions(
@@ -215,3 +216,45 @@ def process_sequential_chats(
 
         if current_message is None:
             raise ValueError(f"Failed to get response from {agent_name}")
+
+def run_workflow(
+    query: str,
+    iterations: int,
+    agent_list: list,
+    agent_functions: list,
+    user_proxy_agent: UserProxyAgent
+) -> None:
+    """
+    Execute a camera-related task for specified number of iterations with proper camera handling.
+    
+    Args:
+        query: The task query to execute
+        iterations: Number of times to repeat the task
+        agent_list: List of agents to use in sequence
+        agent_functions: List of tuples (function, agent, name, description)
+        user_proxy_agent: UserProxyAgent instance
+    """
+    try:
+        # First open the camera
+        print("\nOpening camera...")
+        open_camera()
+        
+        # Execute the task for specified iterations
+        for i in range(iterations):
+            print(f"\nIteration {i+1}/{iterations}:")
+            try:
+                process_sequential_chats(query, agent_list, agent_functions, user_proxy_agent)
+            except Exception as e:
+                print(f"Error in iteration {i+1}: {str(e)}")
+                continue
+                
+    except Exception as e:
+        print(f"Error during task execution: {str(e)}")
+    
+    finally:
+        # Always ensure camera is closed, even if there's an error
+        print("\nClosing camera...")
+        try:
+            close_camera()
+        except Exception as e:
+            print(f"Error closing camera: {str(e)}")
