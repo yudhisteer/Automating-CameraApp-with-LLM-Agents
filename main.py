@@ -2,7 +2,11 @@ from src.utils.config_loader import load_config
 from src.tools.tools import *
 from src.agents.assistant_agent import create_assistant_agent
 from src.agents.user_proxy_agent import create_user_proxy_agent
-from src.utils.agent_utils import register_agent_functions, interpret_context
+from src.utils.agent_utils import (
+    register_agent_functions,
+    interpret_query,
+    determine_agents,
+)
 
 
 filter_dict = {"model": "gpt-4o-mini"}
@@ -20,6 +24,13 @@ minimize_camera_agent = create_assistant_agent(
     sys_msg="You can execute the following functions: minimize_camera",
     llm_config=llm_config,
     function_map={"minimize_camera": minimize_camera},
+)
+
+restore_camera_agent = create_assistant_agent(
+    name="restore_camera_agent",
+    sys_msg="You can execute the following functions: restore_camera",
+    llm_config=llm_config,
+    function_map={"restore_camera": restore_camera},
 )
 
 set_automatic_framing_agent = create_assistant_agent(
@@ -49,6 +60,12 @@ interpreter_agent = create_assistant_agent(
     llm_config=llm_config,
 )
 
+manager_agent = create_assistant_agent(
+    name="manager_agent",
+    sys_msg="manager_agent_msg.txt",
+    llm_config=llm_config,
+)
+
 
 user_proxy_agent = create_user_proxy_agent(
     name="user_proxy_agent",
@@ -63,10 +80,31 @@ if __name__ == "__main__":
     # Register the functions first
     agent_functions = [
         (open_camera, open_camera_agent, "open_camera", "Open the camera"),
-        (minimize_camera, minimize_camera_agent, "minimize_camera", "Minimize the camera"),
-        (set_automatic_framing, set_automatic_framing_agent, "set_automatic_framing", "Set automatic framing to on or off"),
-        (set_blur_type, set_blur_type_agent, "set_blur_type", "Set blur type to standard or portrait"),
-        (set_background_effects, set_background_effects_agent, "set_background_effects", "Set background effects to on or off"),
+        (
+            minimize_camera,
+            minimize_camera_agent,
+            "minimize_camera",
+            "Minimize the camera",
+        ),
+        (restore_camera, restore_camera_agent, "restore_camera", "Restore the camera"),
+        (
+            set_automatic_framing,
+            set_automatic_framing_agent,
+            "set_automatic_framing",
+            "Set automatic framing to on or off",
+        ),
+        (
+            set_blur_type,
+            set_blur_type_agent,
+            "set_blur_type",
+            "Set blur type to standard or portrait",
+        ),
+        (
+            set_background_effects,
+            set_background_effects_agent,
+            "set_background_effects",
+            "Set background effects to on or off",
+        ),
     ]
     register_agent_functions(user_proxy_agent, agent_functions)
 
@@ -75,7 +113,6 @@ if __name__ == "__main__":
     #     message="open the camera",
     #     max_turns=2,
     # )
-
 
     # user_proxy_agent.initiate_chat(
     #     set_automatic_framing_agent,
@@ -95,10 +132,25 @@ if __name__ == "__main__":
     #     max_turns=2,
     # )
 
+    # user_proxy_agent.initiate_chat(
+    #     minimize_camera_agent,
+    #     message="minimize camera",
+    #     max_turns=2,
+    # )
 
+    # user_proxy_agent.initiate_chat(
+    #     restore_camera_agent,
+    #     message="restore camera",
+    #     max_turns=2,
+    # )
 
-    context = "set blur type to portrait"
-    msg_type, iterations, query = interpret_context(context, interpreter_agent)
+    query = "minimize and restore camera"
+    msg_type, iterations, interpreted_query = interpret_query(query, interpreter_agent)
     print("msg_type: ", msg_type)
     print("iterations: ", iterations)
-    print("query: ", query)
+    print("interpreted_query: ", interpreted_query)
+
+    # Determine the agents to use
+    agent_list = determine_agents(interpreted_query, manager_agent, agent_functions)
+
+    print("agent_list: ", agent_list)

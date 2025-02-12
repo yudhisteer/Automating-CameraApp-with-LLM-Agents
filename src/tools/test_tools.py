@@ -17,12 +17,12 @@ if __name__ == "__main__":
     # state = check_background_effects_state()
     # print(f"Background effects state: {state}")
     # print(window.dump_tree())
-    #set_blur_type('portrait')  # 'standard' or 'portrait'
+    # set_blur_type('portrait')  # 'standard' or 'portrait'
 
     # # Test automatic framing
     # state = check_automatic_framing_state()
     # print(f"Automatic framing state: {state}")
-    #print(window.dump_tree())
+    # print(window.dump_tree())
 
     set_automatic_framing(True)  # Turn ON
     time.sleep(1)

@@ -4,7 +4,7 @@ from pywinauto import Application
 from typing import Optional, Annotated
 
 
-def open_camera() -> Annotated[Optional[str], "Camera app opened successfully." ]:
+def open_camera() -> Annotated[Optional[str], "Camera app opened successfully."]:
     """
     Open the Camera app.
     """
@@ -39,6 +39,7 @@ def minimize_camera() -> Annotated[Optional[str], "Camera app minimized successf
         print(f"Failed to minimize Camera app. Error: {e}")
         return f"Failed to minimize Camera app. Error: {e}"
 
+
 def restore_camera() -> Annotated[Optional[str], "Camera app restored successfully."]:
     """
     Restore the Camera app.
@@ -59,7 +60,10 @@ def restore_camera() -> Annotated[Optional[str], "Camera app restored successful
         print(f"Failed to restore Camera app. Error: {e}")
         return f"Failed to restore Camera app. Error: {e}"
 
-def click_windows_studio_effects() -> Annotated[Optional[str], "'Windows Studio Effects' button clicked."]:
+
+def click_windows_studio_effects() -> (
+    Annotated[Optional[str], "'Windows Studio Effects' button clicked."]
+):
     """
     Click the 'Windows Studio Effects' button if it's not already expanded.
     """
@@ -89,7 +93,9 @@ def click_windows_studio_effects() -> Annotated[Optional[str], "'Windows Studio 
         return f"Failed to interact with 'Windows Studio Effects' button. Error: {e}"
 
 
-def check_background_effects_state() -> Annotated[Optional[int], "The state of the toggle button (0 for off, 1 for on)."]:
+def check_background_effects_state() -> (
+    Annotated[Optional[int], "The state of the toggle button (0 for off, 1 for on)."]
+):
     """
     Check the state of the background effects toggle button.
     Returns:
@@ -116,7 +122,9 @@ def check_background_effects_state() -> Annotated[Optional[int], "The state of t
         return None
 
 
-def set_blur_type(blur_type: Annotated[str, "Either 'standard' or 'portrait'"]) -> Annotated[Optional[str], "Blur type set successfully."]:
+def set_blur_type(
+    blur_type: Annotated[str, "Either 'standard' or 'portrait'"],
+) -> Annotated[Optional[str], "Blur type set successfully."]:
     """
     Set the blur type to either 'standard' or 'portrait'.
     First checks if background effects is enabled, enables it if not.
@@ -165,7 +173,12 @@ def set_blur_type(blur_type: Annotated[str, "Either 'standard' or 'portrait'"]) 
         return f"Failed to set blur type. Error: {e}"
 
 
-def set_background_effects(desired_state: Annotated[bool | None, "If provided, will set to this state (True=ON, False=OFF). If None, will toggle current state."] = None) -> Annotated[Optional[str], "Background effects toggled successfully."]:
+def set_background_effects(
+    desired_state: Annotated[
+        bool | None,
+        "If provided, will set to this state (True=ON, False=OFF). If None, will toggle current state.",
+    ] = None,
+) -> Annotated[Optional[str], "Background effects toggled successfully."]:
     """
     Toggle background effects on/off or set to a specific state.
 
@@ -211,6 +224,7 @@ def set_background_effects(desired_state: Annotated[bool | None, "If provided, w
         print(f"Failed to set background effects. Error: {e}")
         return f"Failed to set background effects. Error: {e}"
 
+
 def check_automatic_framing_state() -> int:
     """
     Check the state of the automatic framing toggle button.
@@ -240,7 +254,12 @@ def check_automatic_framing_state() -> int:
         return None
 
 
-def set_automatic_framing(desired_state: Annotated[bool | None, "If provided, will set to this state (True=ON, False=OFF). If None, will toggle current state."] = None) -> Annotated[Optional[str], "Automatic framing toggled successfully."]:
+def set_automatic_framing(
+    desired_state: Annotated[
+        bool | None,
+        "If provided, will set to this state (True=ON, False=OFF). If None, will toggle current state.",
+    ] = None,
+) -> Annotated[Optional[str], "Automatic framing toggled successfully."]:
     """
     Toggle automatic framing on/off or set to a specific state.
 
@@ -251,7 +270,7 @@ def set_automatic_framing(desired_state: Annotated[bool | None, "If provided, wi
     try:
         app = Application(backend="uia").connect(title_re="Camera")
         window = app.window(title_re="Camera")
-        
+
         click_windows_studio_effects()
         button = window.child_window(
             title="Automatic framing",
