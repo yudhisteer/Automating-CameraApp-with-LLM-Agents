@@ -392,6 +392,7 @@ def switch_camera() -> Annotated[Optional[str], "Camera switched successfully."]
         return f"Failed to switch camera. Error: {e}"
 
 
+
 def camera_mode(mode: Annotated[str, "Either 'photo' or 'video'"]) -> Annotated[Optional[str], "Camera mode set successfully."]:
     """
     Set the camera mode to either 'photo' or 'video'.
@@ -403,32 +404,117 @@ def camera_mode(mode: Annotated[str, "Either 'photo' or 'video'"]) -> Annotated[
         app = Application(backend="uia").connect(title_re="Camera")
         window = app.window(title_re="Camera")
         
+        # Try to find the "Switch to photo mode" button
+        switch_to_photo = window.child_window(title="Switch to photo mode", auto_id="CaptureButton_0")
+        # Try to find the "Take video" button
+        take_video_button = window.child_window(title="Take video", auto_id="CaptureButton_1")
+        
         if mode.lower() == 'photo':
-            button = window.child_window(auto_id="CaptureButton_0")
-            # Check if already in photo mode
-            if not button.exists():
+            if switch_to_photo.exists():
+                # If we can see "Switch to photo mode", we're in video mode and need to switch
+                switch_to_photo.click_input()
+                time.sleep(1)
+                print("Camera mode switched to photo")
+                return "Camera mode switched to photo"
+            else:
+                # If we can't see it, we're already in photo mode
                 print("Already in photo mode")
                 return "Already in photo mode"
+                
         elif mode.lower() == 'video':
-            button = window.child_window(auto_id="CaptureButton_1")
-            # Check if already in video mode
-            if not button.exists():
+            if take_video_button.exists():
+                # If we can see "Take video", we're already in video mode
                 print("Already in video mode")
                 return "Already in video mode"
+            else:
+                # If we can't see it, we need to switch to video mode
+                # Look for the switch to video button
+                switch_to_video = window.child_window(auto_id="CaptureButton_1")
+                if switch_to_video.exists():
+                    switch_to_video.click_input()
+                    time.sleep(1)
+                    print("Camera mode switched to video")
+                    return "Camera mode switched to video"
+                else:
+                    print("Video mode button not found")
+                    return "Video mode button not found"
         else:
             print(f"Invalid mode: {mode}. Use either 'photo' or 'video'")
             return f"Invalid mode: {mode}. Use either 'photo' or 'video'"
-            
-        if button.exists() and button.is_enabled():
-            button.click_input()
-            time.sleep(1)  # Wait for mode switch
-            print(f"Camera mode switched to {mode}")
-            return f"Camera mode switched to {mode}"
-        else:
-            print(f"{mode} mode button is not accessible")
-            return f"{mode} mode button is not accessible"
             
     except Exception as e:
         print(f"Failed to switch camera mode. Error: {e}")
         return f"Failed to switch camera mode. Error: {e}"
 
+
+def take_photo() -> Annotated[Optional[str], "Photo taken successfully."]:
+    """
+    Take a photo.
+    """
+    try:
+        app = Application(backend="uia").connect(title_re="Camera")
+        window = app.window(title_re="Camera")
+        
+        # First ensure we're in photo mode
+        photo_result = camera_mode('photo')
+        if photo_result and "Failed" in photo_result:
+            return photo_result  # Return the error from camera_mode
+            
+        # Find and click the take photo button
+        take_button = window.child_window(title="Take photo", auto_id="CaptureButton_0")
+        if take_button.exists() and take_button.is_enabled():
+            take_button.click_input()
+            time.sleep(1)  # Wait for photo to be taken
+            print("Photo taken successfully")
+            return "Photo taken successfully"
+        else:
+            print("Photo button is not accessible")
+            return "Photo button is not accessible"
+            
+    except Exception as e:
+        print(f"Failed to take photo. Error: {e}")
+        return f"Failed to take photo. Error: {e}"
+
+def take_video(duration: Annotated[float, "Recording duration in seconds"]) -> Annotated[Optional[str], "Video recorded successfully."]:
+    """
+    Record a video for a specified duration.
+
+    Args:
+        duration (float): Recording duration in seconds
+    """
+    try:
+        app = Application(backend="uia").connect(title_re="Camera")
+        window = app.window(title_re="Camera")
+        
+        # Ensure we're in video mode
+        video_result = camera_mode('video')
+        if video_result and "Failed" in video_result:
+            return video_result
+            
+        # Find the take video button by its title
+        record_button = window.child_window(title="Take video", auto_id="CaptureButton_1")
+        if not record_button.exists() or not record_button.is_enabled():
+            print("Video record button is not accessible")
+            return "Video record button is not accessible"
+            
+        # Start recording
+        record_button.click_input()
+        print(f"Recording video for {duration} seconds...")
+        
+        # Wait for specified duration
+        time.sleep(duration)
+        
+        # For stopping, we need to find the stop button (might have different title when recording)
+        stop_button = window.child_window(auto_id="CaptureButton_1")
+        if stop_button.exists() and stop_button.is_enabled():
+            stop_button.click_input()
+            time.sleep(1)  # Wait for recording to finalize
+            print("Video recorded successfully")
+            return "Video recorded successfully"
+        else:
+            print("Failed to stop recording - stop button not accessible")
+            return "Failed to stop recording - stop button not accessible"
+            
+    except Exception as e:
+        print(f"Failed to record video. Error: {e}")
+        return f"Failed to record video. Error: {e}"

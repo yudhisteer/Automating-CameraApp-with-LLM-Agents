@@ -30,6 +30,8 @@ if __name__ == "__main__":
     # set_automatic_framing()  # Toggle current state
 
     #switch_camera()
+    #print(window.dump_tree())
     camera_mode('video')
     camera_mode('photo')
-    #print(window.dump_tree())
+    take_photo()
+    take_video(5)
