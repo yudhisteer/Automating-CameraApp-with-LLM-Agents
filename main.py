@@ -20,6 +20,13 @@ open_camera_agent = create_assistant_agent(
     function_map={"open_camera": open_camera},
 )
 
+close_camera_agent = create_assistant_agent(
+    name="close_camera_agent",
+    sys_msg="You can execute the following functions: close_camera",
+    llm_config=llm_config,
+    function_map={"close_camera": close_camera},
+)
+
 minimize_camera_agent = create_assistant_agent(
     name="minimize_camera_agent",
     sys_msg="You can execute the following functions: minimize_camera",
@@ -81,31 +88,12 @@ if __name__ == "__main__":
     # Register the functions first
     agent_functions = [
         (open_camera, open_camera_agent, "open_camera", "Open the camera"),
-        (
-            minimize_camera,
-            minimize_camera_agent,
-            "minimize_camera",
-            "Minimize the camera",
-        ),
+        (close_camera, close_camera_agent, "close_camera", "Close the camera"),
+        (minimize_camera, minimize_camera_agent, "minimize_camera", "Minimize the camera"),
         (restore_camera, restore_camera_agent, "restore_camera", "Restore the camera"),
-        (
-            set_automatic_framing,
-            set_automatic_framing_agent,
-            "set_automatic_framing",
-            "Set automatic framing to on or off",
-        ),
-        (
-            set_blur_type,
-            set_blur_type_agent,
-            "set_blur_type",
-            "Set blur type to standard or portrait",
-        ),
-        (
-            set_background_effects,
-            set_background_effects_agent,
-            "set_background_effects",
-            "Set background effects to on or off",
-        ),
+        (set_automatic_framing, set_automatic_framing_agent, "set_automatic_framing", "Set automatic framing to on or off"),
+        (set_blur_type, set_blur_type_agent, "set_blur_type", "Set blur type to standard or portrait"),
+        (set_background_effects, set_background_effects_agent, "set_background_effects", "Set background effects to on or off"),
     ]
     register_agent_functions(user_proxy_agent, agent_functions)
 
@@ -146,7 +134,7 @@ if __name__ == "__main__":
     # )
 
     # Interpret the query and message type with number of iterations
-    query = "minimize and restore camera"
+    query = "minimize and restore camera 2 times"
     msg_type, iterations, interpreted_query = interpret_query(query, interpreter_agent)
     print("msg_type: ", msg_type)
     print("iterations: ", iterations)
@@ -157,6 +145,22 @@ if __name__ == "__main__":
     print("agent_list: ", agent_list)
 
     # Process the query with the agents
-    process_sequential_chats(
-        interpreted_query, agent_list, agent_functions, user_proxy_agent
+    #process_sequential_chats(interpreted_query, agent_list, agent_functions, user_proxy_agent)
+
+
+    user_proxy_agent.initiate_chat(
+        open_camera_agent,
+        message="open the camera",
+        max_turns=2,
+    )
+
+    for i in range(iterations):
+        print(f"Iteration {i+1}:")
+        process_sequential_chats(interpreted_query, agent_list, agent_functions, user_proxy_agent)
+
+
+    user_proxy_agent.initiate_chat(
+        close_camera_agent,
+        message="close the camera",
+        max_turns=2,
     )

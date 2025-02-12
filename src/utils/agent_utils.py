@@ -163,40 +163,38 @@ def determine_agents(
         print(f"Error in determine_agents: {str(e)}")
         return []
 
+
 def process_sequential_chats(
-    query: str, 
-    agent_sequence: list, 
-    agent_functions: list, 
-    user_proxy_agent: UserProxyAgent
+    query: str,
+    agent_sequence: list,
+    agent_functions: list,
+    user_proxy_agent: UserProxyAgent,
 ) -> None:
     """
     Process a sequence of chats between agents, passing results from one to the next.
-    
+
     Args:
         query: Initial message/task to process
         agent_sequence: List of agent names to process the message sequentially
         agent_functions: List of tuples (function, agent, name, description)
         user_proxy_agent: UserProxyAgent instance
-        
+
     Returns:
         str: Final result after processing through all agents
     """
     # Create a mapping of agent names to their actual agent objects
     agent_map = {func_tuple[2]: func_tuple[1] for func_tuple in agent_functions}
-    
+
     current_message = query
     for agent_name in agent_sequence:
         # Get the corresponding agent object
         recipient = agent_map[agent_name]
-        
+
         # Initiate chat with current agent
         user_proxy_agent.initiate_chat(
-            recipient=recipient, 
-            message=current_message, 
-            max_turns=2, 
-            silent=True
+            recipient=recipient, message=current_message, max_turns=2, silent=True
         )
-        
+
         # Get the chat messages and extract the final result
         chat_messages = user_proxy_agent.chat_messages[recipient]
         current_message = next(
@@ -207,13 +205,13 @@ def process_sequential_chats(
             ),
             None,
         )
-        
+
         # Print formatted message with clear separation
         print("\n" + "=" * 50)
         print(f"Response from {agent_name}:")
         print("-" * 50)
         print(current_message)
         print("=" * 50 + "\n")
-        
+
         if current_message is None:
             raise ValueError(f"Failed to get response from {agent_name}")

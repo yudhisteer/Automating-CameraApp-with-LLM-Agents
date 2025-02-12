@@ -18,6 +18,21 @@ def open_camera() -> Annotated[Optional[str], "Camera app opened successfully."]
         return f"Failed to open the Camera app. Error: {e}"
 
 
+def close_camera() -> Annotated[Optional[str], "Camera app closed successfully."]:
+    """
+    Close the Camera app.
+    """
+    try:
+        app = Application(backend="uia").connect(title_re="Camera")
+        window = app.window(title_re="Camera")
+        window.close()  
+        print("Camera app closed successfully.")
+        return "Camera app closed successfully."
+    except Exception as e:
+        print(f"Failed to close Camera app. Error: {e}")
+        return f"Failed to close Camera app. Error: {e}"
+
+
 def minimize_camera() -> Annotated[Optional[str], "Camera app minimized successfully."]:
     """
     Minimize the Camera app.
