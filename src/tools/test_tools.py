@@ -14,18 +14,18 @@ if __name__ == "__main__":
     # print(window.dump_tree())
     # minimize_camera()
     # restore_camera()
-    click_windows_studio_effects()
-    state = check_background_effects_state()
-    print(f"Background effects state: {state}")
+    # state = check_background_effects_state()
+    # print(f"Background effects state: {state}")
     # print(window.dump_tree())
-    # set_blur_type('portrait')  # or 'portrait'
+    #set_blur_type('portrait')  # 'standard' or 'portrait'
 
-    # Test automatic framing
-    state = check_automatic_framing_state()
-    print(f"Automatic framing state: {state}")
+    # # Test automatic framing
+    # state = check_automatic_framing_state()
+    # print(f"Automatic framing state: {state}")
+    #print(window.dump_tree())
 
     set_automatic_framing(True)  # Turn ON
     time.sleep(1)
     set_automatic_framing(False)  # Turn OFF
     time.sleep(1)
-    set_automatic_framing()  # Toggle current state
+    # set_automatic_framing()  # Toggle current state

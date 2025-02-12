@@ -57,7 +57,7 @@ def restore_camera():
 
 def click_windows_studio_effects():
     """
-    Click the 'Windows Studio Effects' button.
+    Click the 'Windows Studio Effects' button if it's not already expanded.
     """
     try:
         app = Application(backend="uia").connect(title_re="Camera")
@@ -68,13 +68,19 @@ def click_windows_studio_effects():
             class_name="ToggleButton",
         )
         if button.exists() and button.is_enabled():
-            button.click_input()
-            time.sleep(1)
-            print("'Windows Studio Effects' button clicked.")
+            # Check if the button is already in pressed state (panel is open)
+            if not button.get_toggle_state():
+                button.click_input()
+                time.sleep(1)
+                print("'Windows Studio Effects' button clicked.")
+            else:
+                print("'Windows Studio Effects' panel is already open.")
         else:
             print("'Windows Studio Effects' button is not accessible.")
+            return None
     except Exception as e:
         print(f"Failed to interact with 'Windows Studio Effects' button. Error: {e}")
+        return None
 
 
 def check_background_effects_state() -> int:    
@@ -86,6 +92,7 @@ def check_background_effects_state() -> int:
     try:
         app = Application(backend="uia").connect(title_re="Camera")
         window = app.window(title_re="Camera")
+        click_windows_studio_effects()
         button = window.child_window(
             title="Background effects", auto_id="Switch", control_type="Button"
         )
@@ -103,34 +110,6 @@ def check_background_effects_state() -> int:
         return None
 
 
-def check_automatic_framing_state() -> int:
-    """
-    Check the state of the automatic framing toggle button.
-    Returns:
-        int: The state of the toggle button (0 for off, 1 for on).
-    """
-    try:
-        app = Application(backend="uia").connect(title_re="Camera")
-        window = app.window(title_re="Camera")
-        button = window.child_window(
-            title="Automatic framing - The camera will keep you in frame and in focus for videos",
-            auto_id="Switch",
-            control_type="Button",
-        )
-        if button.exists():
-            # 0 means off, 1 means on
-            toggle_state = button.get_toggle_state()
-            state = "ON" if toggle_state == 1 else "OFF"
-            print(f"Automatic framing is {state}")
-            return toggle_state
-        else:
-            print("Automatic framing button not found")
-            return None
-    except Exception as e:
-        print(f"Failed to check Automatic framing state. Error: {e}")
-        return None
-
-
 def set_blur_type(blur_type: str):
     """
     Set the blur type to either 'standard' or 'portrait'.
@@ -142,7 +121,6 @@ def set_blur_type(blur_type: str):
     try:
         app = Application(backend="uia").connect(title_re="Camera")
         window = app.window(title_re="Camera")
-
         # First check if background effects is enabled
         effects_state = check_background_effects_state()
         if effects_state != 1:
@@ -158,12 +136,12 @@ def set_blur_type(blur_type: str):
         # Now select the blur type
         if blur_type.lower() == "standard":
             radio_button = window.child_window(
-                title="Standard blur - Apply a heavy blur to obscure background objects",
+                title="Standard blur",
                 control_type="RadioButton",
             )
         elif blur_type.lower() == "portrait":
             radio_button = window.child_window(
-                title="Portrait blur - Blur the background to help keep focus on you",
+                title="Portrait blur",
                 control_type="RadioButton",
             )
         else:
@@ -191,6 +169,7 @@ def set_background_effects(desired_state: bool = None):
     try:
         app = Application(backend="uia").connect(title_re="Camera")
         window = app.window(title_re="Camera")
+        click_windows_studio_effects()
         button = window.child_window(
             title="Background effects", auto_id="Switch", control_type="Button"
         )
@@ -223,6 +202,35 @@ def set_background_effects(desired_state: bool = None):
         print(f"Failed to set background effects. Error: {e}")
 
 
+def check_automatic_framing_state() -> int:
+    """
+    Check the state of the automatic framing toggle button.
+    Returns:
+        int: The state of the toggle button (0 for off, 1 for on).
+    """
+    try:
+        app = Application(backend="uia").connect(title_re="Camera")
+        window = app.window(title_re="Camera")
+        click_windows_studio_effects()
+        button = window.child_window(
+            title="Automatic framing",
+            auto_id="Switch",
+            control_type="Button",
+        )
+        if button.exists():
+            # 0 means off, 1 means on
+            toggle_state = button.get_toggle_state()
+            state = "ON" if toggle_state == 1 else "OFF"
+            print(f"Automatic framing is {state}")
+            return toggle_state
+        else:
+            print("Automatic framing button not found")
+            return None
+    except Exception as e:
+        print(f"Failed to check Automatic framing state. Error: {e}")
+        return None
+
+
 def set_automatic_framing(desired_state: bool = None):
     """
     Toggle automatic framing on/off or set to a specific state.
@@ -234,17 +242,16 @@ def set_automatic_framing(desired_state: bool = None):
     try:
         app = Application(backend="uia").connect(title_re="Camera")
         window = app.window(title_re="Camera")
+        
+        click_windows_studio_effects()
         button = window.child_window(
-            title="Automatic framing - The camera will keep you in frame and in focus for videos",
+            title="Automatic framing",
             auto_id="Switch",
             control_type="Button",
         )
 
         if button.exists():
-            current_state = check_automatic_framing_state()
-            if current_state is None:
-                print("Could not determine current automatic framing state")
-                return
+            current_state = button.get_toggle_state() == 1
 
             # Determine if we need to click
             should_click = False
@@ -253,16 +260,16 @@ def set_automatic_framing(desired_state: bool = None):
                 should_click = True
             else:
                 # Set to specific state - click only if different
-                should_click = (current_state == 1) != desired_state
+                should_click = current_state != desired_state
 
             if should_click:
                 button.click_input()
                 time.sleep(1)
-                new_state = "ON" if check_automatic_framing_state() == 1 else "OFF"
+                new_state = "ON" if button.get_toggle_state() == 1 else "OFF"
                 print(f"Automatic framing switched to: {new_state}")
             else:
                 print(
-                    f"Automatic framing already in desired state: {'ON' if current_state == 1 else 'OFF'}"
+                    f"Automatic framing already in desired state: {'ON' if current_state else 'OFF'}"
                 )
         else:
             print("Automatic framing button not found")
