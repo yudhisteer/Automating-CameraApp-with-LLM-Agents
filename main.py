@@ -6,6 +6,7 @@ from src.utils.agent_utils import (
     register_agent_functions,
     interpret_query,
     determine_agents,
+    process_sequential_chats,
 )
 
 
@@ -144,6 +145,7 @@ if __name__ == "__main__":
     #     max_turns=2,
     # )
 
+    # Interpret the query and message type with number of iterations
     query = "minimize and restore camera"
     msg_type, iterations, interpreted_query = interpret_query(query, interpreter_agent)
     print("msg_type: ", msg_type)
@@ -152,5 +154,9 @@ if __name__ == "__main__":
 
     # Determine the agents to use
     agent_list = determine_agents(interpreted_query, manager_agent, agent_functions)
-
     print("agent_list: ", agent_list)
+
+    # Process the query with the agents
+    process_sequential_chats(
+        interpreted_query, agent_list, agent_functions, user_proxy_agent
+    )
