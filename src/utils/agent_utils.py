@@ -99,7 +99,7 @@ def interpret_query(
 
 
 def determine_agents(
-    task: str, decision_agent: ConversableAgent, agent_functions: list
+    task: str, decision_agent: ConversableAgent, agent_map: dict
 ) -> list:
     """
     Determine the sequence of agents needed to complete a task.
@@ -107,47 +107,29 @@ def determine_agents(
     Args:
         task: The task to be completed
         decision_agent: The agent that will determine the sequence
-        agent_functions: List of tuples (function, agent, name, description)
+        agent_map: Dictionary mapping agent names to actual agent objects
+                  (e.g., {"data_fetcher_agent": data_fetcher})
 
     Returns:
-        list: A list of agents in the order they should be executed
+        list: A list of agent objects in the order they should be executed
     """
     try:
-        # Create a clean list of available agents with their descriptions
-        available_agents = [
-            f"- {func_tuple[2]}: {func_tuple[3]}" for func_tuple in agent_functions
-        ]
-
-        # Create messages for the decision agent
-        messages = [
-            {
-                "role": "user",
-                "content": f"""Analyze this task and determine which agents are needed to complete it.
-                Task: '{task}'
+        message = {
+            "role": "user",
+            "content": f"""Based on this task: '{task}', determine the sequence of agents needed to complete it.
+                Please respond with a Python list containing the required agents in order.
+                Use only these options:
+                {chr(10).join(f'- {agent}' for agent in agent_map.keys())}
                 
-                Available agents:
-                {chr(10).join(available_agents)}
-                
-                Respond with a Python list containing only the required agent names in order.
-                If no agents are needed or the task is complete, return an empty list: []""",
-            }
-        ]
+                If no agents are needed or the task is complete, return an empty list."""
+        }
 
-        # Get response from decision agent using generate_reply
-        response = decision_agent.generate_reply(messages)
-
-        # Parse the response
+        response = decision_agent.generate_reply([message])
+        
         try:
             agent_list = eval(response)
             if isinstance(agent_list, list):
-                # Create a map of agent names to agents for validation
-                agent_map = {
-                    func_tuple[2]: func_tuple[1] for func_tuple in agent_functions
-                }
-
-                # Validate all agents exist in agent_functions
                 if all(agent in agent_map for agent in agent_list):
-                    # Return the actual agent objects in the specified order
                     return agent_list
                 else:
                     print(f"Invalid agent(s) in list: {agent_list}")
@@ -168,7 +150,7 @@ def determine_agents(
 def process_sequential_chats(
     query: str,
     agent_sequence: list,
-    agent_functions: list,
+    agent_map: dict,
     user_proxy_agent: UserProxyAgent,
 ) -> None:
     """
@@ -176,20 +158,23 @@ def process_sequential_chats(
 
     Args:
         query: Initial message/task to process
-        agent_sequence: List of agent names to process the message sequentially
-        agent_functions: List of tuples (function, agent, name, description)
+        agent_sequence: List of agents to process the message sequentially (e.g., ["data_fetcher_agent", "data_processor_agent", "report_generator_agent"])
+        agent_map: Dictionary mapping agent names to actual agent objects (e.g., {"data_fetcher_agent": data_fetcher,
+                                                                                  "data_processor_agent": data_processor,
+                                                                                  "report_generator_agent": report_generator}
+                                                                                  )
         user_proxy_agent: UserProxyAgent instance
 
     Returns:
         str: Final result after processing through all agents
     """
-    # Create a mapping of agent names to their actual agent objects
-    agent_map = {func_tuple[2]: func_tuple[1] for func_tuple in agent_functions}
-
+    original_command = query 
     current_message = query
     for agent_name in agent_sequence:
         # Get the corresponding agent object
         recipient = agent_map[agent_name]
+        print("Executing agent: ", agent_name)
+        print("current_message: ", current_message)
 
         # Initiate chat with current agent
         user_proxy_agent.initiate_chat(
@@ -200,7 +185,7 @@ def process_sequential_chats(
         chat_messages = user_proxy_agent.chat_messages[recipient]
         current_message = next(
             (
-                msg["content"]
+                f"{msg['content']}\nOriginal command: {original_command}"
                 for msg in reversed(chat_messages)
                 if msg["content"] is not None
             ),
@@ -220,8 +205,8 @@ def process_sequential_chats(
 def run_workflow(
     query: str,
     iterations: int,
-    agent_list: list,
-    agent_functions: list,
+    agent_sequence: list,
+    agent_map: dict,
     user_proxy_agent: UserProxyAgent
 ) -> None:
     """
@@ -230,8 +215,8 @@ def run_workflow(
     Args:
         query: The task query to execute
         iterations: Number of times to repeat the task
-        agent_list: List of agents to use in sequence
-        agent_functions: List of tuples (function, agent, name, description)
+        agent_sequence: List of agents to use in sequence
+        agent_map: Dictionary mapping agent names to actual agent objects
         user_proxy_agent: UserProxyAgent instance
     """
     try:
@@ -243,7 +228,7 @@ def run_workflow(
         for i in range(iterations):
             print(f"\nIteration {i+1}/{iterations}:")
             try:
-                process_sequential_chats(query, agent_list, agent_functions, user_proxy_agent)
+                process_sequential_chats(query, agent_sequence, agent_map, user_proxy_agent)
             except Exception as e:
                 print(f"Error in iteration {i+1}: {str(e)}")
                 continue

@@ -190,49 +190,95 @@ def set_blur_type(
         return f"Failed to set blur type. Error: {e}"
 
 
+# def set_background_effects(
+#     desired_state: Annotated[
+#         bool | None,
+#         "If provided, will set to this state (True=ON, False=OFF). If None, will toggle current state.",
+#     ] = None,
+# ) -> Annotated[Optional[str], "Background effects toggled successfully."]:
+#     """
+#     Toggle background effects on/off or set to a specific state.
+
+#     Args:
+#         desired_state (bool, optional): If provided, will set to this state (True=ON, False=OFF).
+#                                       If None, will toggle current state.
+#     """
+#     try:
+#         app = Application(backend="uia").connect(title_re="Camera")
+#         window = app.window(title_re="Camera")
+#         click_windows_studio_effects()
+#         button = window.child_window(
+#             title="Background effects", auto_id="Switch", control_type="Button"
+#         )
+
+#         if button.exists():
+#             current_state = button.get_toggle_state() == 1
+
+#             # Determine if we need to click
+#             should_click = False
+#             if desired_state is None:
+#                 # Toggle mode - always click
+#                 should_click = True
+#             else:
+#                 # Set to specific state - click only if different
+#                 should_click = current_state != desired_state
+
+#             if should_click:
+#                 button.click_input()
+#                 time.sleep(1)
+#                 new_state = "ON" if button.get_toggle_state() == 1 else "OFF"
+#                 print(f"Background effects switched to: {new_state}")
+#             else:
+#                 print(
+#                     f"Background effects already in desired state: {'ON' if current_state else 'OFF'}"
+#                 )
+#             return f"Background effects toggled successfully."
+#         else:
+#             print("Background effects button not found")
+#             return "Background effects button not found"
+
+#     except Exception as e:
+#         print(f"Failed to set background effects. Error: {e}")
+#         return f"Failed to set background effects. Error: {e}"
+
+
 def set_background_effects(
-    desired_state: Annotated[
-        bool | None,
-        "If provided, will set to this state (True=ON, False=OFF). If None, will toggle current state.",
-    ] = None,
-) -> Annotated[Optional[str], "Background effects toggled successfully."]:
+    desired_state: Annotated[bool, "True=ON, False=OFF"]
+) -> Annotated[str, "Background effects toggled successfully."]:
     """
-    Toggle background effects on/off or set to a specific state.
+    Set background effects to a specific state.
 
     Args:
-        desired_state (bool, optional): If provided, will set to this state (True=ON, False=OFF).
-                                      If None, will toggle current state.
+        desired_state (bool): True to set ON, False to set OFF
     """
     try:
         app = Application(backend="uia").connect(title_re="Camera")
         window = app.window(title_re="Camera")
         click_windows_studio_effects()
         button = window.child_window(
-            title="Background effects", auto_id="Switch", control_type="Button"
+            title="Background effects", 
+            auto_id="Switch", 
+            control_type="Button"
         )
 
         if button.exists():
-            current_state = button.get_toggle_state() == 1
+            # Check current state using the dedicated function
+            current_state = check_background_effects_state() == 1
 
-            # Determine if we need to click
-            should_click = False
-            if desired_state is None:
-                # Toggle mode - always click
-                should_click = True
-            else:
-                # Set to specific state - click only if different
-                should_click = current_state != desired_state
+            # Only click if current state doesn't match desired state
+            should_click = current_state != desired_state
 
             if should_click:
                 button.click_input()
                 time.sleep(1)
                 new_state = "ON" if button.get_toggle_state() == 1 else "OFF"
                 print(f"Background effects switched to: {new_state}")
+                return f"Background effects toggled successfully."
             else:
                 print(
                     f"Background effects already in desired state: {'ON' if current_state else 'OFF'}"
                 )
-            return f"Background effects toggled successfully."
+                return f"Background effects already in desired state."
         else:
             print("Background effects button not found")
             return "Background effects button not found"
@@ -240,7 +286,6 @@ def set_background_effects(
     except Exception as e:
         print(f"Failed to set background effects. Error: {e}")
         return f"Failed to set background effects. Error: {e}"
-
 
 def check_automatic_framing_state() -> int:
     """
@@ -271,18 +316,16 @@ def check_automatic_framing_state() -> int:
         return None
 
 
+
+
 def set_automatic_framing(
-    desired_state: Annotated[
-        bool | None,
-        "If provided, will set to this state (True=ON, False=OFF). If None, will toggle current state.",
-    ] = None,
-) -> Annotated[Optional[str], "Automatic framing toggled successfully."]:
+    desired_state: Annotated[bool, "True=ON, False=OFF"]
+) -> Annotated[str, "Automatic framing toggled successfully."]:
     """
-    Toggle automatic framing on/off or set to a specific state.
+    Set automatic framing to a specific state.
 
     Args:
-        desired_state (bool, optional): If provided, will set to this state (True=ON, False=OFF).
-                                      If None, will toggle current state.
+        desired_state (bool): True to set ON, False to set OFF
     """
     try:
         app = Application(backend="uia").connect(title_re="Camera")
@@ -296,16 +339,11 @@ def set_automatic_framing(
         )
 
         if button.exists():
-            current_state = button.get_toggle_state() == 1
+            # Check current state using the dedicated function
+            current_state = check_automatic_framing_state() == 1
 
-            # Determine if we need to click
-            should_click = False
-            if desired_state is None:
-                # Toggle mode - always click
-                should_click = True
-            else:
-                # Set to specific state - click only if different
-                should_click = current_state != desired_state
+            # Only click if current state doesn't match desired state
+            should_click = current_state != desired_state
 
             if should_click:
                 button.click_input()
@@ -317,6 +355,7 @@ def set_automatic_framing(
                 print(
                     f"Automatic framing already in desired state: {'ON' if current_state else 'OFF'}"
                 )
+                return f"Automatic framing already in desired state."
         else:
             print("Automatic framing button not found")
             return "Automatic framing button not found"
@@ -324,3 +363,72 @@ def set_automatic_framing(
     except Exception as e:
         print(f"Failed to set automatic framing. Error: {e}")
         return f"Failed to set automatic framing. Error: {e}"
+
+
+def switch_camera() -> Annotated[Optional[str], "Camera switched successfully."]:
+    """
+    Switch between available cameras.
+    """
+    try:
+        app = Application(backend="uia").connect(title_re="Camera")
+        window = app.window(title_re="Camera")
+        button = window.child_window(
+            title="Change camera", 
+            auto_id="SwitchCameraButtonId", 
+            control_type="Button"
+        )
+        
+        if button.exists() and button.is_enabled():
+            button.click_input()
+            time.sleep(1)  # Wait for camera switch
+            print("Camera switched successfully")
+            return "Camera switched successfully"
+        else:
+            print("Camera switch button is not accessible")
+            return "Camera switch button is not accessible"
+            
+    except Exception as e:
+        print(f"Failed to switch camera. Error: {e}")
+        return f"Failed to switch camera. Error: {e}"
+
+
+def camera_mode(mode: Annotated[str, "Either 'photo' or 'video'"]) -> Annotated[Optional[str], "Camera mode set successfully."]:
+    """
+    Set the camera mode to either 'photo' or 'video'.
+
+    Args:
+        mode (str): Either 'photo' or 'video'
+    """
+    try:
+        app = Application(backend="uia").connect(title_re="Camera")
+        window = app.window(title_re="Camera")
+        
+        if mode.lower() == 'photo':
+            button = window.child_window(auto_id="CaptureButton_0")
+            # Check if already in photo mode
+            if not button.exists():
+                print("Already in photo mode")
+                return "Already in photo mode"
+        elif mode.lower() == 'video':
+            button = window.child_window(auto_id="CaptureButton_1")
+            # Check if already in video mode
+            if not button.exists():
+                print("Already in video mode")
+                return "Already in video mode"
+        else:
+            print(f"Invalid mode: {mode}. Use either 'photo' or 'video'")
+            return f"Invalid mode: {mode}. Use either 'photo' or 'video'"
+            
+        if button.exists() and button.is_enabled():
+            button.click_input()
+            time.sleep(1)  # Wait for mode switch
+            print(f"Camera mode switched to {mode}")
+            return f"Camera mode switched to {mode}"
+        else:
+            print(f"{mode} mode button is not accessible")
+            return f"{mode} mode button is not accessible"
+            
+    except Exception as e:
+        print(f"Failed to switch camera mode. Error: {e}")
+        return f"Failed to switch camera mode. Error: {e}"
+

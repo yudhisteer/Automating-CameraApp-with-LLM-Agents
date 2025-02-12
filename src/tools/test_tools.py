@@ -22,10 +22,14 @@ if __name__ == "__main__":
     # # Test automatic framing
     # state = check_automatic_framing_state()
     # print(f"Automatic framing state: {state}")
-    # print(window.dump_tree())
 
-    set_automatic_framing(True)  # Turn ON
-    time.sleep(1)
-    set_automatic_framing(False)  # Turn OFF
-    time.sleep(1)
+    # set_automatic_framing(True)  # Turn ON
+    # time.sleep(1)
+    # set_automatic_framing(False)  # Turn OFF
+    # time.sleep(1)
     # set_automatic_framing()  # Toggle current state
+
+    #switch_camera()
+    camera_mode('video')
+    camera_mode('photo')
+    #print(window.dump_tree())

@@ -44,7 +44,25 @@ restore_camera_agent = create_assistant_agent(
 
 set_automatic_framing_agent = create_assistant_agent(
     name="set_automatic_framing_agent",
-    sys_msg="You can execute the following functions: set_automatic_framing",
+    sys_msg="""You control the automatic framing setting for the camera. When receiving a message:
+
+1. Parse the desired state from the message:
+   - If it contains "to on", "enable", "activate" -> set desired_state=True
+   - If it contains "to off", "disable", "deactivate" -> set desired_state=False
+
+2. Execute set_automatic_framing with the correct desired_state parameter:
+   - Always pass True or False explicitly
+   - Never use None as desired_state
+
+3. Focus only on automatic framing commands:
+   - Ignore commands about other features like background effects
+   - If you receive a sequence of commands, only execute the automatic framing part
+
+4. Return a clear, simple response indicating what was done
+
+Example:
+Input: "set background effects to on then set automatic framing to off"
+Action: Execute set_automatic_framing(desired_state=False)""",
     llm_config=llm_config,
     function_map={"set_automatic_framing": set_automatic_framing},
 )
@@ -58,7 +76,25 @@ set_blur_type_agent = create_assistant_agent(
 
 set_background_effects_agent = create_assistant_agent(
     name="set_background_effects_agent",
-    sys_msg="You can execute the following functions: set_background_effects",
+    sys_msg="""You control the background effects setting for the camera. When receiving a message:
+
+1. Parse the desired state from the message:
+   - If it contains "to on", "enable", "activate" -> set desired_state=True
+   - If it contains "to off", "disable", "deactivate" -> set desired_state=False
+
+2. Execute set_background_effects with the correct desired_state parameter:
+   - Always pass True or False explicitly
+   - Never use None as desired_state
+
+3. Focus only on background effects commands:
+   - Ignore commands about other features like automatic framing
+   - If you receive a sequence of commands, only execute the background effects part
+
+4. Return a clear, simple response indicating what was done
+
+Example:
+Input: "set background effects to on then set automatic framing to on"
+Action: Execute set_background_effects(desired_state=True)""",
     llm_config=llm_config,
     function_map={"set_background_effects": set_background_effects},
 )
@@ -78,7 +114,7 @@ manager_agent = create_assistant_agent(
 
 user_proxy_agent = create_user_proxy_agent(
     name="user_proxy_agent",
-    sys_msg="Execute the appropriate function based on the user's request.",
+    sys_msg="user_proxy_agent_msg.txt",
     llm_config=llm_config,
     human_input_mode="NEVER",
 )
@@ -97,6 +133,17 @@ if __name__ == "__main__":
         (set_background_effects, set_background_effects_agent, "set_background_effects", "Set background effects to on or off"),
     ]
     register_agent_functions(user_proxy_agent, agent_functions)
+
+    # agents map
+    agent_map = {
+        "open_camera_agent": open_camera_agent,
+        "close_camera_agent": close_camera_agent,
+        "minimize_camera_agent": minimize_camera_agent,
+        "restore_camera_agent": restore_camera_agent,
+        "set_automatic_framing_agent": set_automatic_framing_agent,
+        "set_blur_type_agent": set_blur_type_agent,
+        "set_background_effects_agent": set_background_effects_agent,
+    }
 
     # user_proxy_agent.initiate_chat(
     #     open_camera_agent,
@@ -135,24 +182,30 @@ if __name__ == "__main__":
     # )
 
     # Interpret the query and message type with number of iterations
-    query = "minimize and restore camera 2 times"
+    query = """
+
+    1. Set automatic framing to on and off
+
+    Repeat the above 5 times
+
+    """
     msg_type, iterations, interpreted_query = interpret_query(query, interpreter_agent)
     print("msg_type: ", msg_type)
     print("iterations: ", iterations)
     print("interpreted_query: ", interpreted_query)
 
     # Determine the agents to use
-    agent_list = determine_agents(interpreted_query, manager_agent, agent_functions)
-    print("agent_list: ", agent_list)
+    agent_sequence = determine_agents(interpreted_query, manager_agent, agent_map)
+    print("agent_sequence: ", agent_sequence)
 
-    # Process the query with the agents
-    #process_sequential_chats(interpreted_query, agent_list, agent_functions, user_proxy_agent)
+    # open_camera()
+    # process_sequential_chats(interpreted_query, agent_sequence, agent_map, user_proxy_agent)
 
-
+    # Run the workflow
     run_workflow(
         query=interpreted_query,
         iterations=iterations,
-        agent_list=agent_list,
-        agent_functions=agent_functions,
+        agent_sequence=agent_sequence,
+        agent_map=agent_map,
         user_proxy_agent=user_proxy_agent
     )
