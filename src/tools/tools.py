@@ -116,7 +116,7 @@ def check_background_effects_state() -> Annotated[Optional[int], "The state of t
         return None
 
 
-def set_blur_type(blur_type: str):
+def set_blur_type(blur_type: Annotated[str, "Either 'standard' or 'portrait'"]) -> Annotated[Optional[str], "Blur type set successfully."]:
     """
     Set the blur type to either 'standard' or 'portrait'.
     First checks if background effects is enabled, enables it if not.
@@ -152,19 +152,20 @@ def set_blur_type(blur_type: str):
             )
         else:
             print(f"Invalid blur type: {blur_type}. Use 'standard' or 'portrait'")
-            return
+            return f"Invalid blur type: {blur_type}. Use 'standard' or 'portrait'"
 
         if radio_button.exists():
             radio_button.click_input()
             print(f"Set blur type to: {blur_type}")
         else:
             print(f"Could not find {blur_type} blur radio button")
-
+            return f"Could not find {blur_type} blur radio button"
     except Exception as e:
         print(f"Failed to set blur type. Error: {e}")
+        return f"Failed to set blur type. Error: {e}"
 
 
-def set_background_effects(desired_state: bool = None) -> Annotated[Optional[str], "Background effects toggled successfully."]:
+def set_background_effects(desired_state: Annotated[bool | None, "If provided, will set to this state (True=ON, False=OFF). If None, will toggle current state."] = None) -> Annotated[Optional[str], "Background effects toggled successfully."]:
     """
     Toggle background effects on/off or set to a specific state.
 
@@ -239,7 +240,7 @@ def check_automatic_framing_state() -> int:
         return None
 
 
-def set_automatic_framing(desired_state: bool = None):
+def set_automatic_framing(desired_state: Annotated[bool | None, "If provided, will set to this state (True=ON, False=OFF). If None, will toggle current state."] = None) -> Annotated[Optional[str], "Automatic framing toggled successfully."]:
     """
     Toggle automatic framing on/off or set to a specific state.
 
@@ -275,12 +276,15 @@ def set_automatic_framing(desired_state: bool = None):
                 time.sleep(1)
                 new_state = "ON" if button.get_toggle_state() == 1 else "OFF"
                 print(f"Automatic framing switched to: {new_state}")
+                return f"Automatic framing toggled successfully."
             else:
                 print(
                     f"Automatic framing already in desired state: {'ON' if current_state else 'OFF'}"
                 )
         else:
             print("Automatic framing button not found")
+            return "Automatic framing button not found"
 
     except Exception as e:
         print(f"Failed to set automatic framing. Error: {e}")
+        return f"Failed to set automatic framing. Error: {e}"

@@ -2,7 +2,7 @@ from src.utils.config_loader import load_config
 from src.tools.tools import *
 from src.agents.assistant_agent import create_assistant_agent
 from src.agents.user_proxy_agent import create_user_proxy_agent
-from src.utils.agent_utils import register_agent_functions
+from src.utils.agent_utils import register_agent_functions, interpret_context
 
 
 filter_dict = {"model": "gpt-4o-mini"}
@@ -95,13 +95,10 @@ if __name__ == "__main__":
     #     max_turns=2,
     # )
 
-    messages = [
-        {
-            "role": "user",
-            "content": "set background effects to on and off 22 times",
-        }
-    ]
 
-    response = interpreter_agent.generate_reply(messages)
-    print("Interpreter response:", response)
 
+    context = "set blur type to portrait"
+    msg_type, iterations, query = interpret_context(context, interpreter_agent)
+    print("msg_type: ", msg_type)
+    print("iterations: ", iterations)
+    print("query: ", query)

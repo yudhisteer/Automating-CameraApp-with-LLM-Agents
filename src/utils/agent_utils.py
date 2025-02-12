@@ -22,13 +22,53 @@ def register_agent_functions(
         )
 
 
-def interpret_query(
-    context: str, interpreter_agent: AssistantAgent
-) -> Tuple[str, bool, str]:
+def interpret_context(context: str, interpreter_agent: AssistantAgent) -> Tuple[str, int, str]:
     """
-    Get a clean, interpreted query from the interpreter agent.
-    Returns: (interpreted_query, needs_clarification, clarification_msg)
+    Interpret a given context into command parameters using the interpreter agent.
+    
+    Args:
+        context (str): The user's input context to interpret
+        interpreter_agent: The LLM agent used for interpretation
+        
+    Returns:
+        tuple: (msg_type, iterations, query)
     """
+    def parse_interpreter_response(response):
+        """
+        Parse the interpreter's response into its components.
+        """
+        msg_type = None
+        iterations = 1
+        query = None
+        
+        try:
+            lines = response.strip().split('\n')
+            for line in lines:
+                if not line.strip():
+                    continue
+                    
+                parts = [p.strip() for p in line.split(':', 1)]
+                if len(parts) != 2:
+                    continue
+                    
+                key, value = parts
+                
+                if key == 'TYPE':
+                    msg_type = value
+                elif key == 'ITERATIONS':
+                    try:
+                        iterations = int(value)
+                    except ValueError:
+                        iterations = 1
+                elif key == 'QUERY':
+                    query = value
+        
+        except Exception as e:
+            print(f"Error parsing response: {e}")
+        
+        return msg_type, iterations, query
+
+    # Create the messages structure
     messages = [
         {
             "role": "user",
@@ -39,25 +79,17 @@ def interpret_query(
         {context}
 
         Output format:
-        NEEDS_CLARIFICATION: [true/false]
-        CLARIFICATION_MSG: [your question if clarification needed]
-        QUERY: [the interpreted command]""",
+        TYPE: [TASK|CONVERSATION|UNCLEAR]
+        ITERATIONS: [Number of times to execute, default 1]
+        QUERY: [Final interpreted command with tool and parameters]""",
         }
     ]
 
+    # Get response from interpreter agent
     response = interpreter_agent.generate_reply(messages)
-    print("Interpreter response:", response)
+    
+    # Parse and return the components
+    return parse_interpreter_response(response)
 
-    # Parse response
-    parsed = {
-        key: value.strip()
-        for line in response.split("\n")
-        if ": " in line
-        for key, value in [line.split(":", 1)]
-    }
 
-    return (
-        parsed.get("QUERY", ""),
-        parsed.get("NEEDS_CLARIFICATION", "false").lower() == "true",
-        parsed.get("CLARIFICATION_MSG", ""),
-    )
+
