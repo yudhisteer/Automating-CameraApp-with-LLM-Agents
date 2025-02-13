@@ -8,6 +8,7 @@ from src.utils.agent_utils import (
     determine_agents,
     process_sequential_chats,
     run_workflow,
+    launch_chat,
 )
 
 
@@ -249,6 +250,8 @@ if __name__ == "__main__":
     # Interpret the query and message type with number of iterations
     query = query_list[0]
     print("query: ", query)
+
+    # query = input("Enter a query: ")
     msg_type, iterations, interpreted_query = interpret_query(query, interpreter_agent)
     print("msg_type: ", msg_type)
     print("iterations: ", iterations)
@@ -262,10 +265,12 @@ if __name__ == "__main__":
     # process_sequential_chats(interpreted_query, agent_sequence, agent_map, user_proxy_agent)
 
     # Run the workflow
-    run_workflow(
-        query=interpreted_query,
-        iterations=iterations,
-        agent_sequence=agent_sequence,
-        agent_map=agent_map,
-        user_proxy_agent=user_proxy_agent
-    )
+    # run_workflow(
+    #     query=interpreted_query,
+    #     iterations=iterations,
+    #     agent_sequence=agent_sequence,
+    #     agent_map=agent_map,
+    #     user_proxy_agent=user_proxy_agent
+    # )
+
+    launch_chat(interpreter_agent, manager_agent, agent_map, user_proxy_agent)

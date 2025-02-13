@@ -172,61 +172,6 @@ def process_sequential_chats(
     chat_results = user_proxy_agent.initiate_chats(chat_configs)
 
 
-# def process_sequential_chats(
-#     query: str,
-#     agent_sequence: list,
-#     agent_map: dict,
-#     user_proxy_agent: UserProxyAgent,
-# ) -> None:
-#     """
-#     Process a sequence of chats between agents, passing results from one to the next.
-
-#     Args:
-#         query: Initial message/task to process
-#         agent_sequence: List of agents to process the message sequentially (e.g., ["data_fetcher_agent", "data_processor_agent", "report_generator_agent"])
-#         agent_map: Dictionary mapping agent names to actual agent objects (e.g., {"data_fetcher_agent": data_fetcher,
-#                                                                                   "data_processor_agent": data_processor,
-#                                                                                   "report_generator_agent": report_generator}
-#                                                                                   )
-#         user_proxy_agent: UserProxyAgent instance
-
-#     Returns:
-#         str: Final result after processing through all agents
-#     """
-#     original_command = query 
-#     current_message = query
-#     for agent_name in agent_sequence:
-#         # Get the corresponding agent object
-#         recipient = agent_map[agent_name]
-#         print("Executing agent: ", agent_name)
-#         print("current_message: ", current_message)
-
-#         # Initiate chat with current agent
-#         user_proxy_agent.initiate_chat(
-#             recipient=recipient, message=current_message, max_turns=2, silent=True
-#         )
-
-#         # Get the chat messages and extract the final result
-#         chat_messages = user_proxy_agent.chat_messages[recipient]
-#         current_message = next(
-#             (
-#                 f"{msg['content']}"
-#                 for msg in reversed(chat_messages)
-#                 if msg["content"] is not None
-#             ),
-#             None,
-#         )
-
-#         # Print formatted message with clear separation
-#         print("\n" + "=" * 50)
-#         print(f"Response from {agent_name}:")
-#         print("-" * 50)
-#         print(current_message)
-#         print("=" * 50 + "\n")
-
-#         if current_message is None:
-#             raise ValueError(f"Failed to get response from {agent_name}")
-
 def run_workflow(
     query: str,
     iterations: int,
@@ -261,10 +206,94 @@ def run_workflow(
     except Exception as e:
         print(f"Error during task execution: {str(e)}")
     
-    # finally:
-    #     # Always ensure camera is closed, even if there's an error
-    #     print("\nClosing camera...")
-    #     try:
-    #         close_camera()
-    #     except Exception as e:
-    #         print(f"Error closing camera: {str(e)}")
+
+import gradio as gr
+from typing import Tuple
+from autogen import UserProxyAgent, AssistantAgent, ConversableAgent
+
+def process_message(message: str, chat_history, interpreter_agent, manager_agent, agent_map, user_proxy_agent):
+    """Process a single message through the workflow and return formatted responses."""
+    try:
+        # First, show the user's message
+        chat_history.append({"role": "user", "content": message})
+        
+        # Interpret the query
+        msg_type, iterations, interpreted_query = interpret_query(message, interpreter_agent)
+        interpretation = f"""Query Interpretation:
+• Type: {msg_type}
+• Iterations: {iterations}
+• Interpreted as: {interpreted_query}"""
+        chat_history.append({"role": "assistant", "content": interpretation})
+        
+        # Determine agent sequence
+        agent_sequence = determine_agents(interpreted_query, manager_agent, agent_map)
+        sequence_msg = f"""Agent Sequence:
+{', '.join(agent_sequence) if agent_sequence else 'No agents needed'}"""
+        chat_history.append({"role": "assistant", "content": sequence_msg})
+        
+        # Run the workflow if we have agents to execute
+        if agent_sequence:
+            try:
+                run_workflow(
+                    query=interpreted_query,
+                    iterations=iterations,
+                    agent_sequence=agent_sequence,
+                    agent_map=agent_map,
+                    user_proxy_agent=user_proxy_agent
+                )
+                chat_history.append({"role": "assistant", "content": "Task executed successfully!"})
+            except Exception as e:
+                chat_history.append({"role": "assistant", "content": f"Error executing task: {str(e)}"})
+        
+        return chat_history
+    except Exception as e:
+        chat_history.append({"role": "assistant", "content": f"Error processing message: {str(e)}"})
+        return chat_history
+
+def create_chat_interface(interpreter_agent, manager_agent, agent_map, user_proxy_agent):
+    """Create and configure the Gradio chat interface."""
+    with gr.Blocks() as chat_interface:
+        chatbot = gr.Chatbot(
+            show_label=False,
+            height=600,
+            bubble_full_width=False,
+            type="messages"
+        )
+        
+        with gr.Row():
+            msg = gr.Textbox(
+                label="Your command",
+                placeholder="Type your command here...",
+                show_label=True,
+                scale=4
+            )
+            submit = gr.Button("Send", scale=1)
+        
+        clear = gr.ClearButton([msg, chatbot])
+
+        def respond(message, chat_history):
+            if message:
+                chat_history = process_message(
+                    message,
+                    chat_history,
+                    interpreter_agent,
+                    manager_agent,
+                    agent_map,
+                    user_proxy_agent
+                )
+            return "", chat_history
+
+        msg.submit(respond, [msg, chatbot], [msg, chatbot])
+        submit.click(respond, [msg, chatbot], [msg, chatbot])
+
+    return chat_interface
+
+def launch_chat(interpreter_agent, manager_agent, agent_map, user_proxy_agent):
+    """Launch the chat interface."""
+    chat_interface = create_chat_interface(
+        interpreter_agent,
+        manager_agent,
+        agent_map,
+        user_proxy_agent
+    )
+    chat_interface.launch(share=False)
