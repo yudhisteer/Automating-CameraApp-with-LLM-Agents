@@ -1,7 +1,7 @@
 import time
 import subprocess
 from pywinauto import Application
-from typing import Optional, Annotated
+from typing import Optional, Annotated, Any, Tuple, Literal
 
 
 def open_camera() -> Annotated[Optional[str], "Camera app opened successfully."]:
@@ -365,11 +365,61 @@ def set_automatic_framing(
         return f"Failed to set automatic framing. Error: {e}"
 
 
-def switch_camera() -> Annotated[Optional[str], "Camera switched successfully."]:
+def get_current_camera() -> Tuple[Optional[Literal["FFC", "RFC"]], str]:
     """
-    Switch between available cameras.
+    Detect current camera type (FFC or RFC) based on UI elements present.
+    
+    Returns:
+        Tuple[Optional[CameraType], str]: (camera_type, message)
+        camera_type will be "FFC" or "RFC" if detected, None if detection fails
     """
     try:
+        app = Application(backend="uia").connect(title_re="Camera")
+        window = app.window(title_re="Camera")
+        
+        # Check for unique buttons that indicate camera type
+        barcode_button = window.child_window(
+            title="Switch to barcode mode",
+            auto_id="CaptureButton_5",
+            control_type="Button"
+        )
+        
+        document_button = window.child_window(
+            title="Switch to document mode",
+            auto_id="CaptureButton_3",
+            control_type="Button"
+        )
+        
+        if barcode_button.exists():
+            return "FFC", "Front-facing camera detected (barcode mode available)"
+        elif document_button.exists():
+            return "RFC", "Rear-facing camera detected (document mode available)"
+        else:
+            return None, "Could not determine camera type - neither barcode nor document mode buttons found"
+            
+    except Exception as e:
+        return None, f"Failed to detect camera type. Error: {e}"
+
+def switch_camera(target_type: Optional[Literal["FFC", "RFC"]] = None) -> Annotated[str, "Operation result message"]:
+    """
+    Switch between available cameras with optional target type specification.
+    
+    Args:
+        target_type: Target camera type ("FFC" or "RFC"). If None, simply switches to other camera.
+    
+    Returns:
+        str: Operation result message
+    """
+    try:
+        # First check current camera type
+        current_type, detect_msg = get_current_camera()
+        
+        if current_type is None:
+            print(f"Warning: {detect_msg}")
+        elif target_type and current_type == target_type:
+            return f"Already using {target_type} camera, no switch needed"
+            
+        # Proceed with switch
         app = Application(backend="uia").connect(title_re="Camera")
         window = app.window(title_re="Camera")
         button = window.child_window(
@@ -381,6 +431,20 @@ def switch_camera() -> Annotated[Optional[str], "Camera switched successfully."]
         if button.exists() and button.is_enabled():
             button.click_input()
             time.sleep(1)  # Wait for camera switch
+            
+            # Verify switch result if target was specified
+            if target_type:
+                new_type, _ = get_current_camera()
+                if new_type == target_type:
+                    print(f"Successfully switched to {target_type} camera")
+                    return f"Successfully switched to {target_type} camera"
+                elif new_type is None:
+                    print("Switch completed but camera type verification failed")
+                    return "Switch completed but camera type verification failed"
+                else:
+                    print(f"Switch completed but wrong camera type detected. Current: {new_type}, Target: {target_type}")
+                    return f"Switch completed but wrong camera type detected. Current: {new_type}, Target: {target_type}"
+            
             print("Camera switched successfully")
             return "Camera switched successfully"
         else:
@@ -390,6 +454,7 @@ def switch_camera() -> Annotated[Optional[str], "Camera switched successfully."]
     except Exception as e:
         print(f"Failed to switch camera. Error: {e}")
         return f"Failed to switch camera. Error: {e}"
+
 
 
 
@@ -518,3 +583,200 @@ def take_video(duration: Annotated[float, "Recording duration in seconds"]) -> A
     except Exception as e:
         print(f"Failed to record video. Error: {e}")
         return f"Failed to record video. Error: {e}"
+
+
+def open_system_menu() -> Annotated[Optional[str], "System menu opened successfully."]:
+    """
+    Open the system menu in the Camera app.
+    """
+    try:
+        app = Application(backend="uia").connect(title_re="Camera")
+        window = app.window(title_re="Camera")
+        
+        # Find the system menu button
+        system_menu = window.child_window(title="Open Settings Menu", auto_id="settingsButton", control_type="Button")
+        
+        if system_menu.exists() and system_menu.is_enabled():
+            system_menu.click_input()
+            time.sleep(1)  # Wait for menu to open
+            print("System menu opened successfully")
+            return "System menu opened successfully"
+        else:
+            print("System menu is not accessible")
+            return "System menu is not accessible"
+            
+    except Exception as e:
+        print(f"Failed to open system menu. Error: {e}")
+        return f"Failed to open system menu. Error: {e}"
+
+
+def open_photo_settings() -> Annotated[Optional[str], "Photo settings opened successfully."]:
+    """
+    Open the photo settings menu in the Camera app.
+    """
+    try:
+        app = Application(backend="uia").connect(title_re="Camera")
+        window = app.window(title_re="Camera")
+        
+        # Find the photo settings button
+        settings_button = window.child_window(title="Photo settings", control_type="Button")
+        
+        if settings_button.exists() and settings_button.is_enabled():
+            settings_button.click_input()
+            time.sleep(0.5)  # Wait for settings to open
+            print("Photo settings opened successfully")
+            return "Photo settings opened successfully"
+        else:
+            print("Photo settings button is not accessible")
+            return "Photo settings button is not accessible"
+            
+    except Exception as e:
+        print(f"Failed to open photo settings. Error: {e}")
+        return f"Failed to open photo settings. Error: {e}"
+
+
+
+def open_video_settings() -> Annotated[Optional[str], "Video settings opened successfully."]:
+    """
+    Open the video settings menu in the Camera app.
+    """
+    try:
+        app = Application(backend="uia").connect(title_re="Camera")
+        window = app.window(title_re="Camera")
+        
+        # Find the photo settings button
+        settings_button = window.child_window(title="Video settings", control_type="Button")
+        
+        if settings_button.exists() and settings_button.is_enabled():
+            settings_button.click_input()
+            time.sleep(0.5)  # Wait for settings to open
+            print("Video settings opened successfully")
+            return "Video settings opened successfully"
+        else:
+            print("Video settings button is not accessible")
+            return "Video settings button is not accessible"
+            
+    except Exception as e:
+        print(f"Failed to open video settings. Error: {e}")
+        return f"Failed to open video settings. Error: {e}"
+
+def open_video_quality() -> Annotated[Optional[Any], "Video quality ComboBox or error message"]:
+    """
+    Open the video quality settings in the Camera app.
+    Returns the ComboBox element if successful, error message string if not.
+    """
+    try:
+        app = Application(backend="uia").connect(title_re="Camera")
+        window = app.window(title_re="Camera")
+        
+        # Find all video quality ComboBoxes
+        video_qualities = window.children(title="Video quality", control_type="ComboBox")
+        
+        if not video_qualities:
+            print("Video quality settings not found")
+            return "Video quality settings not found"
+        
+        # Use the first ComboBox we find
+        video_quality = video_qualities[0]
+        
+        if video_quality.exists() and video_quality.is_enabled():
+            video_quality.click_input()
+            time.sleep(0.5)  # Wait for menu to open
+            print("Video quality settings opened successfully")
+            return video_quality
+        else:
+            print("Video quality settings are not accessible")
+            return "Video quality settings are not accessible"
+            
+    except Exception as e:
+        print(f"Failed to open video quality settings. Error: {e}")
+        return f"Failed to open video quality settings. Error: {e}"
+
+def get_video_quality_options() -> Annotated[list[str], "List of available video quality options"]:
+    """
+    Get a list of all available video quality options from the Camera app.
+    
+    Returns:
+        list[str]: List of available quality options (e.g., ['1440p 16:9 30fps', ...])
+    """
+    try:
+        app = Application(backend="uia").connect(title_re="Camera")
+        window = app.window(title_re="Camera")
+        
+        # Find the video quality ComboBox
+        quality_combo = window.child_window(title="Video quality", control_type="ComboBox")
+        
+        if not quality_combo.exists():
+            print("Video quality ComboBox not found")
+            return []
+            
+        # Click and send Down key to expand the ComboBox
+        quality_combo.click_input()
+        time.sleep(0.5)
+        from pywinauto.keyboard import send_keys
+        send_keys('{VK_DOWN}')
+        time.sleep(0.5)
+        
+        # Get unique quality options (using the shorter format)
+        quality_options = set()
+        for desc in window.descendants():
+            text = desc.window_text()
+            # Only get the shorter format options (e.g., "1080p 16:9 30fps")
+            if any(res in text for res in ['1080p', '720p', '1440p', '480p', '360p']) and ':' in text:
+                quality_options.add(text)
+        
+        # Convert to sorted list
+        quality_options = sorted(list(quality_options), 
+                               key=lambda x: (int(x.split('p')[0]), '16:9' in x), 
+                               reverse=True)
+        
+        print(f"Found {len(quality_options)} video quality options: {quality_options}")
+        return quality_options
+            
+    except Exception as e:
+        print(f"Failed to get video quality options. Error: {e}")
+        return []
+
+def set_video_quality(quality: str) -> str:
+    try:
+        app = Application(backend="uia").connect(title_re="Camera")
+        
+        # Click through menus to open video quality
+        app.window(title_re="Camera").menu_select('Settings->Video settings')
+        
+        # Get the ComboBox and click it to open
+        quality_combo = app.window(title_re="Camera").child_window(
+            title="Video quality", 
+            control_type="ComboBox"
+        )
+        quality_combo.click_input()
+        
+        # Use type_keys for keyboard navigation
+        # First go to top
+        for _ in range(10):
+            app.window(title_re="Camera").type_keys("{UP}")
+            time.sleep(0.1)
+            
+        # Now move to desired option
+        quality_list = [
+            '1440p 16:9 30fps',
+            '1440p 4:3 30fps', 
+            '1080p 16:9 30fps',
+            '1080p 4:3 30fps',
+            '720p 16:9 30fps',
+            '480p 4:3 30fps',
+            '360p 16:9 30fps'
+        ]
+        
+        target_index = quality_list.index(quality)
+        for _ in range(target_index):
+            app.window(title_re="Camera").type_keys("{DOWN}")
+            time.sleep(0.1)
+            
+        # Select with enter
+        app.window(title_re="Camera").type_keys("{ENTER}")
+        
+        return f"Set quality to {quality}"
+        
+    except Exception as e:
+        return f"Error: {str(e)}"

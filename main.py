@@ -99,6 +99,36 @@ Action: Execute set_background_effects(desired_state=True)""",
     function_map={"set_background_effects": set_background_effects},
 )
 
+switch_camera_agent = create_assistant_agent(
+    name="switch_camera_agent",
+    sys_msg="You can execute the following functions: switch_camera",
+    llm_config=llm_config,
+    function_map={"switch_camera": switch_camera},
+)
+
+camera_mode_agent = create_assistant_agent(
+    name="camera_mode_agent",
+    sys_msg="You can execute the following functions: camera_mode. You can switch between 'photo' and 'video' mode.",
+    llm_config=llm_config,
+    function_map={"camera_mode": camera_mode},
+)
+
+take_photo_agent = create_assistant_agent(
+    name="take_photo_agent",
+    sys_msg="You can execute the following functions: take_photo",
+    llm_config=llm_config,
+    function_map={"take_photo": take_photo},
+)
+
+take_video_agent = create_assistant_agent(
+    name="take_video_agent",
+    sys_msg="You can execute the following functions: take_video",
+    llm_config=llm_config,
+    function_map={"take_video": take_video},
+)
+
+
+
 interpreter_agent = create_assistant_agent(
     name="interpreter_agent",
     sys_msg="interpreter_agent_msg.txt",
@@ -124,25 +154,29 @@ if __name__ == "__main__":
 
     # Register the functions first
     agent_functions = [
-        (open_camera, open_camera_agent, "open_camera", "Open the camera"),
-        (close_camera, close_camera_agent, "close_camera", "Close the camera"),
         (minimize_camera, minimize_camera_agent, "minimize_camera", "Minimize the camera"),
         (restore_camera, restore_camera_agent, "restore_camera", "Restore the camera"),
         (set_automatic_framing, set_automatic_framing_agent, "set_automatic_framing", "Set automatic framing to on or off"),
         (set_blur_type, set_blur_type_agent, "set_blur_type", "Set blur type to standard or portrait"),
         (set_background_effects, set_background_effects_agent, "set_background_effects", "Set background effects to on or off"),
+        (switch_camera, switch_camera_agent, "switch_camera", "Switch between cameras"),
+        (camera_mode, camera_mode_agent, "camera_mode", "Switch between photo and video mode"),
+        (take_photo, take_photo_agent, "take_photo", "Take a photo"),
+        (take_video, take_video_agent, "take_video", "Take a video"),
     ]
     register_agent_functions(user_proxy_agent, agent_functions)
 
     # agents map
     agent_map = {
-        "open_camera_agent": open_camera_agent,
-        "close_camera_agent": close_camera_agent,
         "minimize_camera_agent": minimize_camera_agent,
         "restore_camera_agent": restore_camera_agent,
         "set_automatic_framing_agent": set_automatic_framing_agent,
         "set_blur_type_agent": set_blur_type_agent,
         "set_background_effects_agent": set_background_effects_agent,
+        "switch_camera_agent": switch_camera_agent,
+        "camera_mode_agent": camera_mode_agent,
+        "take_photo_agent": take_photo_agent,
+        "take_video_agent": take_video_agent,
     }
 
     # user_proxy_agent.initiate_chat(
@@ -184,7 +218,12 @@ if __name__ == "__main__":
     # Interpret the query and message type with number of iterations
     query = """
 
-    1. Set automatic framing to on and off
+    1. Minimize the camera
+    2. Restore the camera
+    3. Take photo
+    4. Take video for 5 seconds
+    5. Switch camera to FFC
+    6. Switch camera to FFC
 
     Repeat the above 5 times
 

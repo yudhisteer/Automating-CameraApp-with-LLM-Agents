@@ -30,8 +30,19 @@ if __name__ == "__main__":
     # set_automatic_framing()  # Toggle current state
 
     #switch_camera()
-    #print(window.dump_tree())
-    camera_mode('video')
-    camera_mode('photo')
-    take_photo()
-    take_video(5)
+    # camera_mode('video')
+    # camera_mode('photo')
+    # take_photo()
+    # take_video(5)
+    # open_system_menu()
+    # open_video_settings()
+    #options = get_video_quality_options()
+    #print(options)
+    current_type, message = get_current_camera()
+    print(f"Current camera: {current_type} ({message})")
+    switch_camera('FFC') # switch to 'FFC' or 'RFC'
+    current_type, message = get_current_camera()
+    print(f"Current camera: {current_type} ({message})")
+    #print(window.print_control_identifiers())
+    #set_video_quality('1440p 16:9 30fps')
+    
