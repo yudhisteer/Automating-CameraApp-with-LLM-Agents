@@ -146,7 +146,6 @@ def determine_agents(
         print(f"Error in determine_agents: {str(e)}")
         return []
 
-
 def process_sequential_chats(
     query: str,
     agent_sequence: list,
@@ -154,53 +153,79 @@ def process_sequential_chats(
     user_proxy_agent: UserProxyAgent,
 ) -> None:
     """
-    Process a sequence of chats between agents, passing results from one to the next.
-
-    Args:
-        query: Initial message/task to process
-        agent_sequence: List of agents to process the message sequentially (e.g., ["data_fetcher_agent", "data_processor_agent", "report_generator_agent"])
-        agent_map: Dictionary mapping agent names to actual agent objects (e.g., {"data_fetcher_agent": data_fetcher,
-                                                                                  "data_processor_agent": data_processor,
-                                                                                  "report_generator_agent": report_generator}
-                                                                                  )
-        user_proxy_agent: UserProxyAgent instance
-
-    Returns:
-        str: Final result after processing through all agents
+    Process camera commands through a sequence of agents using batch chat configuration.
     """
-    original_command = query 
-    current_message = query
+    # Create chat configurations list
+    chat_configs = []
+    original_command = query
+
+    # Build chat configurations for each agent
     for agent_name in agent_sequence:
-        # Get the corresponding agent object
-        recipient = agent_map[agent_name]
-        print("Executing agent: ", agent_name)
-        print("current_message: ", current_message)
+        chat_configs.append({
+            "recipient": agent_map[agent_name],
+            "message": f"Original command: {original_command}\nExecute this step of the sequence",
+            "max_turns": 2,
+            "summary_method": "last_msg"
+        })
 
-        # Initiate chat with current agent
-        user_proxy_agent.initiate_chat(
-            recipient=recipient, message=current_message, max_turns=2, silent=True
-        )
+    # Execute all chats in sequence
+    chat_results = user_proxy_agent.initiate_chats(chat_configs)
 
-        # Get the chat messages and extract the final result
-        chat_messages = user_proxy_agent.chat_messages[recipient]
-        current_message = next(
-            (
-                f"{msg['content']}\nOriginal command: {original_command}"
-                for msg in reversed(chat_messages)
-                if msg["content"] is not None
-            ),
-            None,
-        )
 
-        # Print formatted message with clear separation
-        print("\n" + "=" * 50)
-        print(f"Response from {agent_name}:")
-        print("-" * 50)
-        print(current_message)
-        print("=" * 50 + "\n")
+# def process_sequential_chats(
+#     query: str,
+#     agent_sequence: list,
+#     agent_map: dict,
+#     user_proxy_agent: UserProxyAgent,
+# ) -> None:
+#     """
+#     Process a sequence of chats between agents, passing results from one to the next.
 
-        if current_message is None:
-            raise ValueError(f"Failed to get response from {agent_name}")
+#     Args:
+#         query: Initial message/task to process
+#         agent_sequence: List of agents to process the message sequentially (e.g., ["data_fetcher_agent", "data_processor_agent", "report_generator_agent"])
+#         agent_map: Dictionary mapping agent names to actual agent objects (e.g., {"data_fetcher_agent": data_fetcher,
+#                                                                                   "data_processor_agent": data_processor,
+#                                                                                   "report_generator_agent": report_generator}
+#                                                                                   )
+#         user_proxy_agent: UserProxyAgent instance
+
+#     Returns:
+#         str: Final result after processing through all agents
+#     """
+#     original_command = query 
+#     current_message = query
+#     for agent_name in agent_sequence:
+#         # Get the corresponding agent object
+#         recipient = agent_map[agent_name]
+#         print("Executing agent: ", agent_name)
+#         print("current_message: ", current_message)
+
+#         # Initiate chat with current agent
+#         user_proxy_agent.initiate_chat(
+#             recipient=recipient, message=current_message, max_turns=2, silent=True
+#         )
+
+#         # Get the chat messages and extract the final result
+#         chat_messages = user_proxy_agent.chat_messages[recipient]
+#         current_message = next(
+#             (
+#                 f"{msg['content']}"
+#                 for msg in reversed(chat_messages)
+#                 if msg["content"] is not None
+#             ),
+#             None,
+#         )
+
+#         # Print formatted message with clear separation
+#         print("\n" + "=" * 50)
+#         print(f"Response from {agent_name}:")
+#         print("-" * 50)
+#         print(current_message)
+#         print("=" * 50 + "\n")
+
+#         if current_message is None:
+#             raise ValueError(f"Failed to get response from {agent_name}")
 
 def run_workflow(
     query: str,
@@ -220,9 +245,9 @@ def run_workflow(
         user_proxy_agent: UserProxyAgent instance
     """
     try:
-        # First open the camera
-        print("\nOpening camera...")
-        open_camera()
+        # # First open the camera
+        # print("\nOpening camera...")
+        # open_camera()
         
         # Execute the task for specified iterations
         for i in range(iterations):
@@ -236,10 +261,10 @@ def run_workflow(
     except Exception as e:
         print(f"Error during task execution: {str(e)}")
     
-    finally:
-        # Always ensure camera is closed, even if there's an error
-        print("\nClosing camera...")
-        try:
-            close_camera()
-        except Exception as e:
-            print(f"Error closing camera: {str(e)}")
+    # finally:
+    #     # Always ensure camera is closed, even if there's an error
+    #     print("\nClosing camera...")
+    #     try:
+    #         close_camera()
+    #     except Exception as e:
+    #         print(f"Error closing camera: {str(e)}")

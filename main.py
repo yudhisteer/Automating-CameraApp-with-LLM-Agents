@@ -154,6 +154,8 @@ if __name__ == "__main__":
 
     # Register the functions first
     agent_functions = [
+        (open_camera, open_camera_agent, "open_camera", "Open the camera"),
+        (close_camera, close_camera_agent, "close_camera", "Close the camera"),
         (minimize_camera, minimize_camera_agent, "minimize_camera", "Minimize the camera"),
         (restore_camera, restore_camera_agent, "restore_camera", "Restore the camera"),
         (set_automatic_framing, set_automatic_framing_agent, "set_automatic_framing", "Set automatic framing to on or off"),
@@ -168,6 +170,8 @@ if __name__ == "__main__":
 
     # agents map
     agent_map = {
+        "open_camera_agent": open_camera_agent,
+        "close_camera_agent": close_camera_agent,
         "minimize_camera_agent": minimize_camera_agent,
         "restore_camera_agent": restore_camera_agent,
         "set_automatic_framing_agent": set_automatic_framing_agent,
@@ -215,19 +219,22 @@ if __name__ == "__main__":
     #     max_turns=2,
     # )
 
+    query_list = [
+        """switch background effects to on
+        switch background effects to off
+        Repeat the above 2 times""",
+
+        """switch autoframing to on
+        switch autoframing to off
+        Repeat the above 2 times""",
+
+        """minimize and restore camera 2 times""",
+        
+    ]
+
     # Interpret the query and message type with number of iterations
-    query = """
-
-    1. Minimize the camera
-    2. Restore the camera
-    3. Take photo
-    4. Take video for 5 seconds
-    5. Switch camera to FFC
-    6. Switch camera to FFC
-
-    Repeat the above 5 times
-
-    """
+    query = query_list[2]
+    print("query: ", query)
     msg_type, iterations, interpreted_query = interpret_query(query, interpreter_agent)
     print("msg_type: ", msg_type)
     print("iterations: ", iterations)
