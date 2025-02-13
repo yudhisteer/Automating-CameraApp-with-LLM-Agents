@@ -85,6 +85,12 @@ def click_windows_studio_effects() -> (
     Click the 'Windows Studio Effects' button if it's not already expanded.
     """
     try:
+        # First ensure we're in video mode
+        mode_result = camera_mode('video')
+        if mode_result != "Already in video mode" and mode_result != "Camera mode switched to video":
+            print("Failed to ensure video mode")
+            return "Failed to ensure video mode"
+            
         app = Application(backend="uia").connect(title_re="Camera")
         window = app.window(title_re="Camera")
         button = window.child_window(
@@ -189,57 +195,6 @@ def set_blur_type(
         print(f"Failed to set blur type. Error: {e}")
         return f"Failed to set blur type. Error: {e}"
 
-
-# def set_background_effects(
-#     desired_state: Annotated[
-#         bool | None,
-#         "If provided, will set to this state (True=ON, False=OFF). If None, will toggle current state.",
-#     ] = None,
-# ) -> Annotated[Optional[str], "Background effects toggled successfully."]:
-#     """
-#     Toggle background effects on/off or set to a specific state.
-
-#     Args:
-#         desired_state (bool, optional): If provided, will set to this state (True=ON, False=OFF).
-#                                       If None, will toggle current state.
-#     """
-#     try:
-#         app = Application(backend="uia").connect(title_re="Camera")
-#         window = app.window(title_re="Camera")
-#         click_windows_studio_effects()
-#         button = window.child_window(
-#             title="Background effects", auto_id="Switch", control_type="Button"
-#         )
-
-#         if button.exists():
-#             current_state = button.get_toggle_state() == 1
-
-#             # Determine if we need to click
-#             should_click = False
-#             if desired_state is None:
-#                 # Toggle mode - always click
-#                 should_click = True
-#             else:
-#                 # Set to specific state - click only if different
-#                 should_click = current_state != desired_state
-
-#             if should_click:
-#                 button.click_input()
-#                 time.sleep(1)
-#                 new_state = "ON" if button.get_toggle_state() == 1 else "OFF"
-#                 print(f"Background effects switched to: {new_state}")
-#             else:
-#                 print(
-#                     f"Background effects already in desired state: {'ON' if current_state else 'OFF'}"
-#                 )
-#             return f"Background effects toggled successfully."
-#         else:
-#             print("Background effects button not found")
-#             return "Background effects button not found"
-
-#     except Exception as e:
-#         print(f"Failed to set background effects. Error: {e}")
-#         return f"Failed to set background effects. Error: {e}"
 
 
 def set_background_effects(
@@ -446,60 +401,6 @@ def get_current_camera() -> Tuple[Optional[Literal["FFC", "RFC"]], str]:
     except Exception as e:
         return None, f"Failed to detect camera type. Error: {e}"
 
-# def switch_camera(target_type: Optional[Literal["FFC", "RFC"]] = None) -> Annotated[str, "Operation result message"]:
-#     """
-#     Switch between available cameras with optional target type specification.
-    
-#     Args:
-#         target_type: Target camera type ("FFC" or "RFC"). If None, simply switches to other camera.
-    
-#     Returns:
-#         str: Operation result message
-#     """
-#     try:
-#         # First check current camera type
-#         current_type, detect_msg = get_current_camera()
-        
-#         if current_type is None:
-#             print(f"Warning: {detect_msg}")
-#         elif target_type and current_type == target_type:
-#             return f"Already using {target_type} camera, no switch needed"
-            
-#         # Proceed with switch
-#         app = Application(backend="uia").connect(title_re="Camera")
-#         window = app.window(title_re="Camera")
-#         button = window.child_window(
-#             title="Change camera", 
-#             auto_id="SwitchCameraButtonId", 
-#             control_type="Button"
-#         )
-        
-#         if button.exists() and button.is_enabled():
-#             button.click_input()
-#             time.sleep(2)  # Wait for camera switch
-            
-#             # Verify switch result if target was specified
-#             if target_type:
-#                 new_type, _ = get_current_camera()
-#                 if new_type == target_type:
-#                     print(f"Successfully switched to {target_type} camera")
-#                     return f"Successfully switched to {target_type} camera"
-#                 elif new_type is None:
-#                     print("Switch completed but camera type verification failed")
-#                     return "Switch completed but camera type verification failed"
-#                 else:
-#                     print(f"Switch completed but wrong camera type detected. Current: {new_type}, Target: {target_type}")
-#                     return f"Switch completed but wrong camera type detected. Current: {new_type}, Target: {target_type}"
-            
-#             print("Camera switched successfully")
-#             return "Camera switched successfully"
-#         else:
-#             print("Camera switch button is not accessible")
-#             return "Camera switch button is not accessible"
-            
-#     except Exception as e:
-#         print(f"Failed to switch camera. Error: {e}")
-#         return f"Failed to switch camera. Error: {e}"
 
 
 def switch_camera(target_type: Optional[Literal["FFC", "RFC"]] = None) -> Annotated[str, "Operation result message"]:
