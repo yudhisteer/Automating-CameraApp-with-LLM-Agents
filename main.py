@@ -229,11 +229,25 @@ if __name__ == "__main__":
         Repeat the above 2 times""",
 
         """minimize and restore camera 2 times""",
-        
+
+        """switch to front camera
+        switch to video mode
+        set autoframing to off if not already off
+        set autoframing to on
+        take 2 photos""",
+
+        """switch to front camera
+        switch to video mode
+        set autoframing to on
+        take 2 photos""",
+
+        """switch to front camera
+        switch to RFC
+        repeat the above 2 times""",
     ]
 
     # Interpret the query and message type with number of iterations
-    query = query_list[2]
+    query = query_list[-1]
     print("query: ", query)
     msg_type, iterations, interpreted_query = interpret_query(query, interpreter_agent)
     print("msg_type: ", msg_type)

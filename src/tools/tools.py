@@ -368,6 +368,7 @@ def set_automatic_framing(
 def get_current_camera() -> Tuple[Optional[Literal["FFC", "RFC"]], str]:
     """
     Detect current camera type (FFC or RFC) based on UI elements present.
+    Handles both photo and video modes.
     
     Returns:
         Tuple[Optional[CameraType], str]: (camera_type, message)
@@ -377,28 +378,129 @@ def get_current_camera() -> Tuple[Optional[Literal["FFC", "RFC"]], str]:
         app = Application(backend="uia").connect(title_re="Camera")
         window = app.window(title_re="Camera")
         
-        # Check for unique buttons that indicate camera type
-        barcode_button = window.child_window(
-            title="Switch to barcode mode",
-            auto_id="CaptureButton_5",
-            control_type="Button"
+        # First determine if we're in photo or video mode
+        take_photo_button = window.child_window(
+            title="Take photo",
+            auto_id="CaptureButton_0",
+            control_type="Button",
+            found_index=None
         )
         
-        document_button = window.child_window(
-            title="Switch to document mode",
-            auto_id="CaptureButton_3",
-            control_type="Button"
+        take_video_button = window.child_window(
+            title="Take video",
+            auto_id="CaptureButton_1",
+            control_type="Button",
+            found_index=None
         )
         
-        if barcode_button.exists():
-            return "FFC", "Front-facing camera detected (barcode mode available)"
-        elif document_button.exists():
-            return "RFC", "Rear-facing camera detected (document mode available)"
+        is_video_mode = take_video_button.exists()
+        
+        if is_video_mode:
+            # In video mode, check for mode switches
+            photo_mode_button = window.child_window(
+                title="Switch to photo mode",
+                auto_id="CaptureButton_0",
+                control_type="Button",
+                found_index=None
+            )
+            panorama_mode_button = window.child_window(
+                title="Switch to panorama mode",
+                auto_id="CaptureButton_2",
+                control_type="Button",
+                found_index=None
+            )
+            
+            if panorama_mode_button.exists():
+                return "RFC", "Rear-facing camera detected (panorama mode available in video)"
+            # If no panorama but photo mode switch exists, we're in FFC video mode
+            elif photo_mode_button.exists():
+                return "FFC", "Front-facing camera detected (video mode)"
+                
         else:
-            return None, "Could not determine camera type - neither barcode nor document mode buttons found"
+            # In photo mode, check for barcode/document modes
+            barcode_button = window.child_window(
+                title="Switch to barcode mode",
+                auto_id="CaptureButton_5",
+                control_type="Button",
+                found_index=None
+            )
+            
+            document_button = window.child_window(
+                title="Switch to document mode",
+                auto_id="CaptureButton_3",
+                control_type="Button",
+                found_index=None
+            )
+            
+            if barcode_button.exists():
+                return "FFC", "Front-facing camera detected (barcode mode available)"
+            elif document_button.exists():
+                return "RFC", "Rear-facing camera detected (document mode available)"
+        
+        # If we reached here, we couldn't determine the camera type
+        if take_photo_button.exists() or take_video_button.exists():
+            return None, "Camera active but type cannot be determined definitively"
+            
+        return None, "Could not determine camera type - no identifying buttons found"
             
     except Exception as e:
         return None, f"Failed to detect camera type. Error: {e}"
+
+# def switch_camera(target_type: Optional[Literal["FFC", "RFC"]] = None) -> Annotated[str, "Operation result message"]:
+#     """
+#     Switch between available cameras with optional target type specification.
+    
+#     Args:
+#         target_type: Target camera type ("FFC" or "RFC"). If None, simply switches to other camera.
+    
+#     Returns:
+#         str: Operation result message
+#     """
+#     try:
+#         # First check current camera type
+#         current_type, detect_msg = get_current_camera()
+        
+#         if current_type is None:
+#             print(f"Warning: {detect_msg}")
+#         elif target_type and current_type == target_type:
+#             return f"Already using {target_type} camera, no switch needed"
+            
+#         # Proceed with switch
+#         app = Application(backend="uia").connect(title_re="Camera")
+#         window = app.window(title_re="Camera")
+#         button = window.child_window(
+#             title="Change camera", 
+#             auto_id="SwitchCameraButtonId", 
+#             control_type="Button"
+#         )
+        
+#         if button.exists() and button.is_enabled():
+#             button.click_input()
+#             time.sleep(2)  # Wait for camera switch
+            
+#             # Verify switch result if target was specified
+#             if target_type:
+#                 new_type, _ = get_current_camera()
+#                 if new_type == target_type:
+#                     print(f"Successfully switched to {target_type} camera")
+#                     return f"Successfully switched to {target_type} camera"
+#                 elif new_type is None:
+#                     print("Switch completed but camera type verification failed")
+#                     return "Switch completed but camera type verification failed"
+#                 else:
+#                     print(f"Switch completed but wrong camera type detected. Current: {new_type}, Target: {target_type}")
+#                     return f"Switch completed but wrong camera type detected. Current: {new_type}, Target: {target_type}"
+            
+#             print("Camera switched successfully")
+#             return "Camera switched successfully"
+#         else:
+#             print("Camera switch button is not accessible")
+#             return "Camera switch button is not accessible"
+            
+#     except Exception as e:
+#         print(f"Failed to switch camera. Error: {e}")
+#         return f"Failed to switch camera. Error: {e}"
+
 
 def switch_camera(target_type: Optional[Literal["FFC", "RFC"]] = None) -> Annotated[str, "Operation result message"]:
     """
@@ -430,31 +532,42 @@ def switch_camera(target_type: Optional[Literal["FFC", "RFC"]] = None) -> Annota
         
         if button.exists() and button.is_enabled():
             button.click_input()
-            time.sleep(1)  # Wait for camera switch
+            time.sleep(2)  # Increased wait time to 2 seconds
             
             # Verify switch result if target was specified
             if target_type:
-                new_type, _ = get_current_camera()
-                if new_type == target_type:
-                    print(f"Successfully switched to {target_type} camera")
+                # Try up to 3 times to detect the correct camera type
+                for _ in range(3):
+                    new_type, _ = get_current_camera()
+                    if new_type == target_type:
+                        return f"Successfully switched to {target_type} camera"
+                    elif new_type is None:
+                        time.sleep(0.5)  # Wait a bit more if detection failed
+                        continue
+                    else:
+                        # If wrong type detected, try one more camera switch
+                        if _ == 0:  # Only try one additional switch
+                            button.click_input()
+                            time.sleep(2)
+                        else:
+                            time.sleep(0.5)
+                
+                # If we get here, the switch wasn't successful
+                final_type, _ = get_current_camera()
+                if final_type == target_type:
                     return f"Successfully switched to {target_type} camera"
-                elif new_type is None:
-                    print("Switch completed but camera type verification failed")
+                elif final_type is None:
                     return "Switch completed but camera type verification failed"
                 else:
-                    print(f"Switch completed but wrong camera type detected. Current: {new_type}, Target: {target_type}")
-                    return f"Switch completed but wrong camera type detected. Current: {new_type}, Target: {target_type}"
+                    return f"Switch completed but wrong camera type detected. Current: {final_type}, Target: {target_type}"
             
-            print("Camera switched successfully")
             return "Camera switched successfully"
         else:
-            print("Camera switch button is not accessible")
             return "Camera switch button is not accessible"
             
     except Exception as e:
         print(f"Failed to switch camera. Error: {e}")
         return f"Failed to switch camera. Error: {e}"
-
 
 
 
