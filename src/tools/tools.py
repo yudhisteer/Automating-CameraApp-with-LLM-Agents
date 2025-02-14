@@ -201,15 +201,33 @@ def set_background_effects(
     desired_state: Annotated[bool, "True=ON, False=OFF"]
 ) -> Annotated[str, "Background effects toggled successfully."]:
     """
-    Set background effects to a specific state.
+    Set background effects to a specific state, ensuring FFC camera is active first.
+    Note: This function leaves the Windows Studio Effects panel open after completion.
 
     Args:
         desired_state (bool): True to set ON, False to set OFF
     """
     try:
+        # First ensure we're on FFC
+        current_type, detect_msg = get_current_camera()
+        if current_type is None:
+            return f"Failed to detect camera type: {detect_msg}"
+            
+        if current_type != "FFC":
+            switch_result = switch_camera(target_type="FFC")
+            if "successfully" not in switch_result:
+                return f"Failed to switch to FFC camera: {switch_result}"
+            time.sleep(2) 
+            
         app = Application(backend="uia").connect(title_re="Camera")
         window = app.window(title_re="Camera")
-        click_windows_studio_effects()
+        
+        # Check Windows Studio Effects panel state - will open if closed, stay open if already open
+        effects_result = click_windows_studio_effects()
+        if "not accessible" in effects_result or "Failed" in effects_result:
+            return f"Failed to access Windows Studio Effects: {effects_result}"
+            
+        # Panel is now open, proceed with background effects
         button = window.child_window(
             title="Background effects", 
             auto_id="Switch", 
@@ -323,7 +341,7 @@ def set_automatic_framing(
 def get_current_camera() -> Tuple[Optional[Literal["FFC", "RFC"]], str]:
     """
     Detect current camera type (FFC or RFC) based on UI elements present.
-    Handles both photo and video modes.
+    In video mode, uses Windows Studio Effects panel visibility to detect FFC.
     
     Returns:
         Tuple[Optional[CameraType], str]: (camera_type, message)
@@ -351,13 +369,17 @@ def get_current_camera() -> Tuple[Optional[Literal["FFC", "RFC"]], str]:
         is_video_mode = take_video_button.exists()
         
         if is_video_mode:
-            # In video mode, check for mode switches
-            photo_mode_button = window.child_window(
-                title="Switch to photo mode",
-                auto_id="CaptureButton_0",
+            # In video mode, check for Windows Studio Effects button
+            windows_effects_button = window.child_window(
+                title="Windows Studio Effects",
                 control_type="Button",
-                found_index=None
+                class_name="ToggleButton",
             )
+            
+            if windows_effects_button.exists() and windows_effects_button.is_enabled():
+                return "FFC", "Front-facing camera detected (Windows Studio Effects available)"
+            
+            # If Windows Studio Effects not found, check for panorama mode
             panorama_mode_button = window.child_window(
                 title="Switch to panorama mode",
                 auto_id="CaptureButton_2",
@@ -367,9 +389,9 @@ def get_current_camera() -> Tuple[Optional[Literal["FFC", "RFC"]], str]:
             
             if panorama_mode_button.exists():
                 return "RFC", "Rear-facing camera detected (panorama mode available in video)"
-            # If no panorama but photo mode switch exists, we're in FFC video mode
-            elif photo_mode_button.exists():
-                return "FFC", "Front-facing camera detected (video mode)"
+            
+            # If neither Windows Effects nor panorama available, we can't determine definitively
+            return None, "Camera in video mode but type cannot be determined definitively"
                 
         else:
             # In photo mode, check for barcode/document modes
