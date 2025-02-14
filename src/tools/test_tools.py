@@ -37,12 +37,12 @@ if __name__ == "__main__":
     # open_system_menu()
     # open_video_settings()
     #options = get_video_quality_options()
-    # switch_camera('FFC') # switch to 'FFC' or 'RFC'
+    switch_camera('RFC') # switch to 'FFC' or 'RFC'
     # current_type, message = get_current_camera()
     # print(f"Current camera: {current_type} ({message})")
-    switch_camera('RFC') # switch to 'FFC' or 'RFC'
-    current_type, message = get_current_camera()
-    print(f"Current camera: {current_type} ({message})")
+    # switch_camera('RFC') # switch to 'FFC' or 'RFC'
+    # current_type, message = get_current_camera()
+    # print(f"Current camera: {current_type} ({message})")
     #print(window.print_control_identifiers())
     # switch_camera('FFC') # switch to 'FFC' or 'RFC'
     # switch_camera('RFC') # switch to 'FFC' or 'RFC'

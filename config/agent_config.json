@@ -1,0 +1,84 @@
+{
+    "agent_functions": [
+      {
+        "function": "open_camera",
+        "agent": "open_camera_agent",
+        "name": "open_camera",
+        "description": "Open the camera"
+      },
+      {
+        "function": "close_camera",
+        "agent": "close_camera_agent",
+        "name": "close_camera",
+        "description": "Close the camera"
+      },
+      {
+        "function": "minimize_camera",
+        "agent": "minimize_camera_agent",
+        "name": "minimize_camera",
+        "description": "Minimize the camera"
+      },
+      {
+        "function": "restore_camera",
+        "agent": "restore_camera_agent",
+        "name": "restore_camera",
+        "description": "Restore the camera"
+      },
+      {
+        "function": "set_automatic_framing",
+        "agent": "set_automatic_framing_agent",
+        "name": "set_automatic_framing",
+        "description": "Set automatic framing to on or off"
+      },
+      {
+        "function": "set_blur_type",
+        "agent": "set_blur_type_agent",
+        "name": "set_blur_type",
+        "description": "Set blur type to standard or portrait"
+      },
+      {
+        "function": "set_background_effects",
+        "agent": "set_background_effects_agent",
+        "name": "set_background_effects",
+        "description": "Set background effects to on or off"
+      },
+      {
+        "function": "switch_camera",
+        "agent": "switch_camera_agent",
+        "name": "switch_camera",
+        "description": "Switch between available cameras"
+      },
+      {
+        "function": "camera_mode",
+        "agent": "camera_mode_agent",
+        "name": "camera_mode",
+        "description": "Switch between photo and video modes"
+      },
+      {
+        "function": "take_photo",
+        "agent": "take_photo_agent",
+        "name": "take_photo",
+        "description": "Take a photo"
+      },
+      {
+        "function": "take_video",
+        "agent": "take_video_agent",
+        "name": "take_video",
+        "description": "Record a video"
+      }
+    ],
+    
+    "agent_map": {
+      "open_camera_agent": "open_camera_agent",
+      "close_camera_agent": "close_camera_agent",
+      "minimize_camera_agent": "minimize_camera_agent",
+      "restore_camera_agent": "restore_camera_agent",
+      "set_automatic_framing_agent": "set_automatic_framing_agent",
+      "set_blur_type_agent": "set_blur_type_agent",
+      "set_background_effects_agent": "set_background_effects_agent",
+      "switch_camera_agent": "switch_camera_agent",
+      "camera_mode_agent": "camera_mode_agent",
+      "take_photo_agent": "take_photo_agent",
+      "take_video_agent": "take_video_agent"
+    }
+  }

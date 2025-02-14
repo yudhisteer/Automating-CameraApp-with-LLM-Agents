@@ -1,0 +1,32 @@
+{
+  "testCases": {
+    "1": {
+      "description": "switch to FFC and take 2 pictures",
+      "result": "Pass"
+    },
+    "2": {
+      "description": "switch background effects to on and off. Repeat 5 times",
+      "result": "N/A"
+    },
+    "3": {
+      "description": "Autoframing toggle test",
+      "result": "N/A"
+    },
+    "4": {
+      "description": "Minimize and restore camera test",
+      "result": "N/A"
+    },
+    "5": {
+      "description": "Front camera video mode with autoframing test",
+      "result": "N/A"
+    },
+    "6": {
+      "description": "Front camera video mode with autoframing enabled",
+      "result": "N/A"
+    },
+    "7": {
+      "description": "Camera switching stress test",
+      "result": "N/A"
+    }
+  }
+}

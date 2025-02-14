@@ -2,6 +2,7 @@ from autogen import ConversableAgent, register_function
 from autogen import AssistantAgent, UserProxyAgent
 from typing import Tuple
 from src.tools.tools import open_camera, close_camera
+import gradio as gr
 
 
 def register_agent_functions(
@@ -164,7 +165,7 @@ def process_sequential_chats(
         chat_configs.append({
             "recipient": agent_map[agent_name],
             "message": f"Original command: {original_command}\nExecute this step of the sequence",
-            "max_turns": 2,
+            "max_turns": 3,
             "summary_method": "last_msg"
         })
 
@@ -206,10 +207,6 @@ def run_workflow(
     except Exception as e:
         print(f"Error during task execution: {str(e)}")
     
-
-import gradio as gr
-from typing import Tuple
-from autogen import UserProxyAgent, AssistantAgent, ConversableAgent
 
 def process_message(message: str, chat_history, interpreter_agent, manager_agent, agent_map, user_proxy_agent):
     """Process a single message through the workflow and return formatted responses."""

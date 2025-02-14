@@ -10,7 +10,7 @@ from src.utils.agent_utils import (
     run_workflow,
     launch_chat,
 )
-
+import json
 
 filter_dict = {"model": "gpt-4o-mini"}
 llm_config = {"config_list": load_config(filter_dict)}
@@ -45,64 +45,28 @@ restore_camera_agent = create_assistant_agent(
 
 set_automatic_framing_agent = create_assistant_agent(
     name="set_automatic_framing_agent",
-    sys_msg="""You control the automatic framing setting for the camera. When receiving a message:
-
-1. Parse the desired state from the message:
-   - If it contains "to on", "enable", "activate" -> set desired_state=True
-   - If it contains "to off", "disable", "deactivate" -> set desired_state=False
-
-2. Execute set_automatic_framing with the correct desired_state parameter:
-   - Always pass True or False explicitly
-   - Never use None as desired_state
-
-3. Focus only on automatic framing commands:
-   - Ignore commands about other features like background effects
-   - If you receive a sequence of commands, only execute the automatic framing part
-
-4. Return a clear, simple response indicating what was done
-
-Example:
-Input: "set background effects to on then set automatic framing to off"
-Action: Execute set_automatic_framing(desired_state=False)""",
+    sys_msg="set_automatic_framing_agent_msg.txt",
     llm_config=llm_config,
     function_map={"set_automatic_framing": set_automatic_framing},
 )
 
 set_blur_type_agent = create_assistant_agent(
     name="set_blur_type_agent",
-    sys_msg="You can execute the following functions: set_blur_type",
+    sys_msg="set_blur_type_agent_msg.txt",
     llm_config=llm_config,
     function_map={"set_blur_type": set_blur_type},
 )
 
 set_background_effects_agent = create_assistant_agent(
     name="set_background_effects_agent",
-    sys_msg="""You control the background effects setting for the camera. When receiving a message:
-
-1. Parse the desired state from the message:
-   - If it contains "to on", "enable", "activate" -> set desired_state=True
-   - If it contains "to off", "disable", "deactivate" -> set desired_state=False
-
-2. Execute set_background_effects with the correct desired_state parameter:
-   - Always pass True or False explicitly
-   - Never use None as desired_state
-
-3. Focus only on background effects commands:
-   - Ignore commands about other features like automatic framing
-   - If you receive a sequence of commands, only execute the background effects part
-
-4. Return a clear, simple response indicating what was done
-
-Example:
-Input: "set background effects to on then set automatic framing to on"
-Action: Execute set_background_effects(desired_state=True)""",
+    sys_msg="set_background_effects_agent_msg.txt",
     llm_config=llm_config,
     function_map={"set_background_effects": set_background_effects},
 )
 
 switch_camera_agent = create_assistant_agent(
     name="switch_camera_agent",
-    sys_msg="You can execute the following functions: switch_camera",
+    sys_msg="switch_camera_agent_msg.txt",
     llm_config=llm_config,
     function_map={"switch_camera": switch_camera},
 )
@@ -116,14 +80,14 @@ camera_mode_agent = create_assistant_agent(
 
 take_photo_agent = create_assistant_agent(
     name="take_photo_agent",
-    sys_msg="You can execute the following functions: take_photo",
+    sys_msg="take_photo_agent_msg.txt",
     llm_config=llm_config,
     function_map={"take_photo": take_photo},
 )
 
 take_video_agent = create_assistant_agent(
     name="take_video_agent",
-    sys_msg="You can execute the following functions: take_video",
+    sys_msg="take_video_agent_msg.txt",
     llm_config=llm_config,
     function_map={"take_video": take_video},
 )
@@ -184,72 +148,21 @@ if __name__ == "__main__":
         "take_video_agent": take_video_agent,
     }
 
-    # user_proxy_agent.initiate_chat(
-    #     open_camera_agent,
-    #     message="open the camera",
-    #     max_turns=2,
-    # )
+    # Load the test cases
+    with open('cases/test_cases.json', 'r') as f:
+        test_data = json.load(f)
 
-    # user_proxy_agent.initiate_chat(
-    #     set_automatic_framing_agent,
-    #     message="set automatic framing to on and off 22 times",
-    #     max_turns=2,
-    # )
+    # Access a specific test case by ID
+    test_id = "2"
+    query = test_data['testCases'][test_id]
+    print(f"Running test: {query['description']}")
 
-    # user_proxy_agent.initiate_chat(
-    #     set_blur_type_agent,
-    #     message="set blur type to standard",
-    #     max_turns=2,
-    # )
+    # Update a test result by ID
+    test_data['testCases'][test_id]['result'] = "N/A"
 
-    # user_proxy_agent.initiate_chat(
-    #     set_background_effects_agent,
-    #     message="set background effects to off",
-    #     max_turns=2,
-    # )
-
-    # user_proxy_agent.initiate_chat(
-    #     minimize_camera_agent,
-    #     message="minimize camera",
-    #     max_turns=2,
-    # )
-
-    # user_proxy_agent.initiate_chat(
-    #     restore_camera_agent,
-    #     message="restore camera",
-    #     max_turns=2,
-    # )
-
-    query_list = [
-        """switch background effects to on
-        switch background effects to off
-        Repeat the above 2 times""",
-
-        """switch autoframing to on
-        switch autoframing to off
-        Repeat the above 2 times""",
-
-        """minimize and restore camera 2 times""",
-
-        """switch to front camera
-        switch to video mode
-        set autoframing to off
-        set autoframing to on
-        take 2 photos""",
-
-        """switch to front camera
-        switch to video mode
-        set autoframing to on
-        take 2 photos""",
-
-        """switch to front camera
-        switch to RFC
-        repeat the above 2 times""",
-    ]
-
-    # Interpret the query and message type with number of iterations
-    query = query_list[0]
-    print("query: ", query)
+    # Save the updated results
+    with open('cases/test_cases.json', 'w') as f:
+        json.dump(test_data, f, indent=2)
 
     # query = input("Enter a query: ")
     msg_type, iterations, interpreted_query = interpret_query(query, interpreter_agent)
@@ -265,12 +178,12 @@ if __name__ == "__main__":
     # process_sequential_chats(interpreted_query, agent_sequence, agent_map, user_proxy_agent)
 
     # Run the workflow
-    # run_workflow(
-    #     query=interpreted_query,
-    #     iterations=iterations,
-    #     agent_sequence=agent_sequence,
-    #     agent_map=agent_map,
-    #     user_proxy_agent=user_proxy_agent
-    # )
+    run_workflow(
+        query=interpreted_query,
+        iterations=iterations,
+        agent_sequence=agent_sequence,
+        agent_map=agent_map,
+        user_proxy_agent=user_proxy_agent
+    )
 
-    launch_chat(interpreter_agent, manager_agent, agent_map, user_proxy_agent)
+    # launch_chat(interpreter_agent, manager_agent, agent_map, user_proxy_agent)

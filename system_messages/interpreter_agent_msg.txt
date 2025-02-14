@@ -37,6 +37,28 @@ TYPE: TASK
 ITERATIONS: 1
 QUERY: ensure autoframing is off then turn on autoframing
 
+Example 4:
+Input: "Take video for 10 seconds"
+
+TYPE: TASK
+ITERATIONS: 1
+QUERY: take video for 10 seconds
+
+Example 5:
+Input: "Turn on autoframing and take 2 pictures"
+
+TYPE: TASK
+ITERATIONS: 1
+QUERY: turn on autoframing then take 2 pictures
+
+Example 6:
+Input: "Turn on autoframing and take 2 pictures. Repeat the above 5 times"
+
+TYPE: TASK
+ITERATIONS: 5
+QUERY: turn on autoframing then take 2 pictures
+
+
 IMPORTANT:
 - Include implicit state requirements (turning features off before on)
 - Use clear English descriptions

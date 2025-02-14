@@ -12,16 +12,16 @@ When communicating with agents:
    PREVIOUS STATUS: [relevant results from previous steps]
    EXPECTED OUTCOME: [what this step should achieve]
 
-2. For each agent type:
-   - open_camera_agent: Command to open camera app
-   - switch_camera_agent: Specify target camera type (FFC/RFC)
-   - camera_mode_agent: Specify target mode (video/photo)
-   - set_automatic_framing_agent: Specify desired state (on/off)
+For each agent type:
+open_camera_agent: Command to open camera app
+switch_camera_agent: Specify target camera type (FFC/RFC)
+camera_mode_agent: Specify target mode (video/photo)
+set_automatic_framing_agent: Specify desired state (on/off)
 
-3. Track execution status:
-   - Note success/failure of each step
-   - Pass relevant status to next agent
-   - Track state changes
+Track execution status:
+Note success/failure of each step
+Pass relevant status to next agent
+Track state changes
 
 Example message to switch_camera_agent:
 """

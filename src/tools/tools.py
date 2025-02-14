@@ -416,6 +416,7 @@ def switch_camera(target_type: Optional[Literal["FFC", "RFC"]] = None) -> Annota
     try:
         # First check current camera type
         current_type, detect_msg = get_current_camera()
+        print(f"Current camera type: {current_type}")
         
         if current_type is None:
             print(f"Warning: {detect_msg}")
@@ -435,32 +436,32 @@ def switch_camera(target_type: Optional[Literal["FFC", "RFC"]] = None) -> Annota
             button.click_input()
             time.sleep(2)  # Increased wait time to 2 seconds
             
-            # Verify switch result if target was specified
-            if target_type:
-                # Try up to 3 times to detect the correct camera type
-                for _ in range(3):
-                    new_type, _ = get_current_camera()
-                    if new_type == target_type:
-                        return f"Successfully switched to {target_type} camera"
-                    elif new_type is None:
-                        time.sleep(0.5)  # Wait a bit more if detection failed
-                        continue
-                    else:
-                        # If wrong type detected, try one more camera switch
-                        if _ == 0:  # Only try one additional switch
-                            button.click_input()
-                            time.sleep(2)
-                        else:
-                            time.sleep(0.5)
+            # # Verify switch result if target was specified
+            # if target_type:
+            #     # Try up to 3 times to detect the correct camera type
+            #     for _ in range(3):
+            #         new_type, _ = get_current_camera()
+            #         if new_type == target_type:
+            #             return f"Successfully switched to {target_type} camera"
+            #         elif new_type is None:
+            #             time.sleep(1)  # Wait a bit more if detection failed
+            #             continue
+            #         else:
+            #             # If wrong type detected, try one more camera switch
+            #             if _ == 0:  # Only try one additional switch
+            #                 button.click_input()
+            #                 time.sleep(1)
+            #             else:
+            #                 time.sleep(0.5)
                 
-                # If we get here, the switch wasn't successful
-                final_type, _ = get_current_camera()
-                if final_type == target_type:
-                    return f"Successfully switched to {target_type} camera"
-                elif final_type is None:
-                    return "Switch completed but camera type verification failed"
-                else:
-                    return f"Switch completed but wrong camera type detected. Current: {final_type}, Target: {target_type}"
+            #     # If we get here, the switch wasn't successful
+            #     final_type, _ = get_current_camera()
+            #     if final_type == target_type:
+            #         return f"Successfully switched to {target_type} camera"
+            #     elif final_type is None:
+            #         return "Switch completed but camera type verification failed"
+            #     else:
+            #         return f"Switch completed but wrong camera type detected. Current: {final_type}, Target: {target_type}"
             
             return "Camera switched successfully"
         else:
@@ -526,15 +527,63 @@ def camera_mode(mode: Annotated[str, "Either 'photo' or 'video'"]) -> Annotated[
         return f"Failed to switch camera mode. Error: {e}"
 
 
-def take_photo() -> Annotated[Optional[str], "Photo taken successfully."]:
+# def take_photo() -> Annotated[Optional[str], "Photo taken successfully."]:
+#     """
+#     Take a photo.
+#     """
+#     try:
+#         app = Application(backend="uia").connect(title_re="Camera")
+#         window = app.window(title_re="Camera")
+        
+#         # First ensure we're in photo mode
+#         photo_result = camera_mode('photo')
+#         if photo_result and "Failed" in photo_result:
+#             return photo_result  # Return the error from camera_mode
+            
+#         # Find and click the take photo button
+#         take_button = window.child_window(title="Take photo", auto_id="CaptureButton_0")
+#         if take_button.exists() and take_button.is_enabled():
+#             take_button.click_input()
+#             time.sleep(1)  # Wait for photo to be taken
+#             print("Photo taken successfully")
+#             return "Photo taken successfully"
+#         else:
+#             print("Photo button is not accessible")
+#             return "Photo button is not accessible"
+            
+#     except Exception as e:
+#         print(f"Failed to take photo. Error: {e}")
+#         return f"Failed to take photo. Error: {e}"
+
+
+def take_photo(num_photos: Annotated[int, "Number of photos to take"] = 1) -> Annotated[Optional[str], "Photos taken successfully."]:
     """
-    Take a photo.
+    Take one or more photos. If Windows Studio Effects button exists and panel is open, closes it before taking photos.
+
+    Args:
+        num_photos (int): Number of photos to take (default: 1)
     """
     try:
         app = Application(backend="uia").connect(title_re="Camera")
         window = app.window(title_re="Camera")
         
-        # First ensure we're in photo mode
+        # First check if Windows Studio Effects button exists before attempting interaction
+        button = window.child_window(
+            title="Windows Studio Effects",
+            control_type="Button",
+            class_name="ToggleButton",
+        )
+        
+        # Only attempt to close panel if button exists (not in FFC mode)
+        if button.exists():
+            if button.is_enabled() and button.get_toggle_state():
+                button.click_input()
+                time.sleep(1)  # Wait for panel to close
+                print("Closed Windows Studio Effects panel")
+        else:
+            print("Windows Studio Effects button not found (possibly in FFC mode)")
+        
+        # Switch to photo mode
         photo_result = camera_mode('photo')
         if photo_result and "Failed" in photo_result:
             return photo_result  # Return the error from camera_mode
@@ -542,21 +591,67 @@ def take_photo() -> Annotated[Optional[str], "Photo taken successfully."]:
         # Find and click the take photo button
         take_button = window.child_window(title="Take photo", auto_id="CaptureButton_0")
         if take_button.exists() and take_button.is_enabled():
-            take_button.click_input()
-            time.sleep(1)  # Wait for photo to be taken
-            print("Photo taken successfully")
-            return "Photo taken successfully"
+            for i in range(num_photos):
+                take_button.click_input()
+                time.sleep(2)  # Wait for photo to be taken
+                print(f"Photo {i+1}/{num_photos} taken successfully")
+            
+            return f"{num_photos} photo{'s' if num_photos > 1 else ''} taken successfully"
         else:
             print("Photo button is not accessible")
             return "Photo button is not accessible"
             
     except Exception as e:
-        print(f"Failed to take photo. Error: {e}")
-        return f"Failed to take photo. Error: {e}"
+        print(f"Failed to take photos. Error: {e}")
+        return f"Failed to take photos. Error: {e}"
+
+# def take_video(duration: Annotated[float, "Recording duration in seconds"]) -> Annotated[Optional[str], "Video recorded successfully."]:
+#     """
+#     Record a video for a specified duration.
+
+#     Args:
+#         duration (float): Recording duration in seconds
+#     """
+#     try:
+#         app = Application(backend="uia").connect(title_re="Camera")
+#         window = app.window(title_re="Camera")
+        
+#         # Ensure we're in video mode
+#         video_result = camera_mode('video')
+#         if video_result and "Failed" in video_result:
+#             return video_result
+            
+#         # Find the take video button by its title
+#         record_button = window.child_window(title="Take video", auto_id="CaptureButton_1")
+#         if not record_button.exists() or not record_button.is_enabled():
+#             print("Video record button is not accessible")
+#             return "Video record button is not accessible"
+            
+#         # Start recording
+#         record_button.click_input()
+#         print(f"Recording video for {duration} seconds...")
+        
+#         # Wait for specified duration
+#         time.sleep(duration)
+        
+#         # For stopping, we need to find the stop button (might have different title when recording)
+#         stop_button = window.child_window(auto_id="CaptureButton_1")
+#         if stop_button.exists() and stop_button.is_enabled():
+#             stop_button.click_input()
+#             time.sleep(1)  # Wait for recording to finalize
+#             print("Video recorded successfully")
+#             return "Video recorded successfully"
+#         else:
+#             print("Failed to stop recording - stop button not accessible")
+#             return "Failed to stop recording - stop button not accessible"
+            
+#     except Exception as e:
+#         print(f"Failed to record video. Error: {e}")
+#         return f"Failed to record video. Error: {e}"
 
 def take_video(duration: Annotated[float, "Recording duration in seconds"]) -> Annotated[Optional[str], "Video recorded successfully."]:
     """
-    Record a video for a specified duration.
+    Record a video for a specified duration. If Windows Studio Effects button exists and panel is open, closes it before recording.
 
     Args:
         duration (float): Recording duration in seconds
@@ -564,6 +659,22 @@ def take_video(duration: Annotated[float, "Recording duration in seconds"]) -> A
     try:
         app = Application(backend="uia").connect(title_re="Camera")
         window = app.window(title_re="Camera")
+        
+        # First check if Windows Studio Effects button exists before attempting interaction
+        button = window.child_window(
+            title="Windows Studio Effects",
+            control_type="Button",
+            class_name="ToggleButton",
+        )
+        
+        # Only attempt to close panel if button exists (not in FFC mode)
+        if button.exists():
+            if button.is_enabled() and button.get_toggle_state():
+                button.click_input()
+                time.sleep(1)  # Wait for panel to close
+                print("Closed Windows Studio Effects panel")
+        else:
+            print("Windows Studio Effects button not found (possibly in FFC mode)")
         
         # Ensure we're in video mode
         video_result = camera_mode('video')
@@ -597,7 +708,6 @@ def take_video(duration: Annotated[float, "Recording duration in seconds"]) -> A
     except Exception as e:
         print(f"Failed to record video. Error: {e}")
         return f"Failed to record video. Error: {e}"
-
 
 def open_system_menu() -> Annotated[Optional[str], "System menu opened successfully."]:
     """
