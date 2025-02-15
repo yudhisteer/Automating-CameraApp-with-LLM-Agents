@@ -1,21 +1,32 @@
 import time
 import subprocess
 from pywinauto import Application
+from pywinauto.findwindows import ElementNotFoundError  
 from typing import Optional, Annotated, Any, Tuple, Literal
 
 
 def open_camera() -> Annotated[Optional[str], "Camera app opened successfully."]:
     """
-    Open the Camera app.
+    Open the Camera app if it's not already running.
     """
     try:
-        subprocess.run("start microsoft.windows.camera:", shell=True, check=True)
-        print("Camera app opened successfully.")
-        time.sleep(3)
-        return "Camera app opened successfully."
+        # First try to connect to existing Camera window
+        try:
+            app = Application(backend="uia").connect(title_re="Camera")
+            print("Camera app is already running.")
+            return "Camera app is already running."
+        except ElementNotFoundError:
+            # If connect fails, then open new instance
+            subprocess.run("start microsoft.windows.camera:", shell=True, check=True)
+            print("Camera app opened successfully.")
+            time.sleep(3)
+            return "Camera app opened successfully."
     except subprocess.CalledProcessError as e:
         print(f"Failed to open the Camera app. Error: {e}")
         return f"Failed to open the Camera app. Error: {e}"
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return f"An error occurred: {e}"
 
 
 def close_camera() -> Annotated[Optional[str], "Camera app closed successfully."]:
@@ -301,10 +312,26 @@ def set_automatic_framing(
         desired_state (bool): True to set ON, False to set OFF
     """
     try:
+
+        # First ensure we're on FFC
+        current_type, detect_msg = get_current_camera()
+        if current_type is None:
+            return f"Failed to detect camera type: {detect_msg}"
+            
+        if current_type != "FFC":
+            switch_result = switch_camera(target_type="FFC")
+            if "successfully" not in switch_result:
+                return f"Failed to switch to FFC camera: {switch_result}"
+            time.sleep(2)
+
         app = Application(backend="uia").connect(title_re="Camera")
         window = app.window(title_re="Camera")
 
-        click_windows_studio_effects()
+        # Check Windows Studio Effects panel state - will open if closed, stay open if already open
+        effects_result = click_windows_studio_effects()
+        if "not accessible" in effects_result or "Failed" in effects_result:
+            return f"Failed to access Windows Studio Effects: {effects_result}"
+
         button = window.child_window(
             title="Automatic framing",
             auto_id="Switch",

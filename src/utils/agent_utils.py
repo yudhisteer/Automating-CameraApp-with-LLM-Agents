@@ -147,6 +147,8 @@ def determine_agents(
         print(f"Error in determine_agents: {str(e)}")
         return []
 
+
+
 def process_sequential_chats(
     query: str,
     agent_sequence: list,
@@ -154,23 +156,67 @@ def process_sequential_chats(
     user_proxy_agent: UserProxyAgent,
 ) -> None:
     """
-    Process camera commands through a sequence of agents using batch chat configuration.
+    Process commands through a sequence of agents with clear action context.
+    Each agent receives information about what specific action they should take.
     """
-    # Create chat configurations list
     chat_configs = []
     original_command = query
-
+    
+    # Parse the sequence to determine intended actions
+    actions = parse_sequence_actions(agent_sequence)
+    
     # Build chat configurations for each agent
-    for agent_name in agent_sequence:
+    for idx, (agent_name, intended_action) in enumerate(zip(agent_sequence, actions)):
+        step_context = (
+            f"Original command: {original_command}\n"
+            f"Your role: You are step {idx + 1} in a {len(agent_sequence)}-step sequence.\n"
+            f"Your specific task: {intended_action}\n"
+            "\nPrevious steps executed:\n"
+        )
+        
+        if idx > 0:
+            for step_num, prev_agent in enumerate(agent_sequence[:idx], 1):
+                step_context += f"Step {step_num}: Action by {prev_agent}\n"
+        else:
+            step_context += "No steps executed yet\n"
+
         chat_configs.append({
             "recipient": agent_map[agent_name],
-            "message": f"Original command: {original_command}\nExecute this step of the sequence",
-            "max_turns": 3,
-            "summary_method": "last_msg"
+            "message": step_context,
+            "max_turns": 2,
+            "summary_method": "reflection_with_llm",
+            "summary_prompt": "What specific action did you take in this step?"
         })
 
-    # Execute all chats in sequence
-    chat_results = user_proxy_agent.initiate_chats(chat_configs)
+    return user_proxy_agent.initiate_chats(chat_configs)
+
+def parse_sequence_actions(agent_sequence: list) -> list:
+    """
+    Analyze the agent sequence to determine the specific action each agent should take.
+    Only tracks state for toggleable settings, handles other agents generically.
+    """
+    actions = []
+    # Only track state for agents that need it
+    state_tracking = {
+        "set_automatic_framing_agent": {"state": False, "name": "automatic framing"},
+        "set_background_effects_agent": {"state": False, "name": "background effects"}
+    }
+    
+    for agent in agent_sequence:
+        if agent in state_tracking:
+            # Handle state-tracking agents
+            state_tracking[agent]["state"] = not state_tracking[agent]["state"]
+            actions.append(
+                f"Set {state_tracking[agent]['name']} to "
+                f"{'ON' if state_tracking[agent]['state'] else 'OFF'}"
+            )
+        else:
+            # Handle all other agents generically
+            # Convert agent name to readable format (e.g., "open_camera_agent" -> "Open camera")
+            action_name = agent.replace("_agent", "").replace("_", " ").capitalize()
+            actions.append(action_name)
+    
+    return actions
 
 
 def run_workflow(

@@ -2,30 +2,34 @@
   "testCases": {
     "1": {
       "description": "switch to FFC and take 2 pictures",
-      "result": "Pass"
+      "result": "N/A"
     },
     "2": {
       "description": "switch background effects to on and off. Repeat 5 times",
       "result": "N/A"
     },
     "3": {
-      "description": "Autoframing toggle test",
+      "description": "switch automatic framing to on and off. Repeat 5 times",
       "result": "N/A"
     },
     "4": {
-      "description": "Minimize and restore camera test",
+      "description": "put autoframing on, background effect on, autoframing off, background effect off. Repeat 5 times",
       "result": "N/A"
     },
     "5": {
-      "description": "Front camera video mode with autoframing test",
+      "description": "put autoframing off, background effect on, autoframing on, background effect off. Repeat 5 times",
       "result": "N/A"
     },
     "6": {
-      "description": "Front camera video mode with autoframing enabled",
+      "description": "put background effect on.  switch autoframing to on and off. Repeat 5 times",
       "result": "N/A"
     },
     "7": {
-      "description": "Camera switching stress test",
+      "description": "put autoframing on.  switch background effect to on and off. Repeat 5 times",
+      "result": "N/A"
+    },
+    "8": {
+      "description": "open cameraApp, switch to FFC in video mode,. disable autoframing and enable nackground blur,. minimize and restore camera app 5 times.",
       "result": "N/A"
     }
   }

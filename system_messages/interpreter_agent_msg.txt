@@ -58,6 +58,13 @@ TYPE: TASK
 ITERATIONS: 5
 QUERY: turn on autoframing then take 2 pictures
 
+Example 7:
+Input: "put autoframing on, background effect on, autoframing off, background effect off."
+
+TYPE: TASK
+ITERATIONS: 1
+QUERY: Turn on autoframing, turn on background effect, turn off autoframing, turn off background effect
+
 
 IMPORTANT:
 - Include implicit state requirements (turning features off before on)
