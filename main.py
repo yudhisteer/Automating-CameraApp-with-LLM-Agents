@@ -1,16 +1,17 @@
-from src.utils.config_loader import load_config
-from src.tools.tools import *
+import json
+
 from src.agents.assistant_agent import create_assistant_agent
 from src.agents.user_proxy_agent import create_user_proxy_agent
+from src.tools.tools import *
 from src.utils.agent_utils import (
-    register_agent_functions,
-    interpret_query,
     determine_agents,
-    process_sequential_chats,
-    run_workflow,
+    interpret_query,
     launch_chat,
+    process_sequential_chats,
+    register_agent_functions,
+    run_workflow,
 )
-import json
+from src.utils.config_loader import load_config
 
 filter_dict = {"model": "gpt-4o-mini"}
 llm_config = {"config_list": load_config(filter_dict)}
@@ -93,7 +94,6 @@ take_video_agent = create_assistant_agent(
 )
 
 
-
 interpreter_agent = create_assistant_agent(
     name="interpreter_agent",
     sys_msg="interpreter_agent_msg.txt",
@@ -149,19 +149,19 @@ if __name__ == "__main__":
     }
 
     # Load the test cases
-    with open('cases/test_cases.json', 'r') as f:
+    with open("cases/test_cases.json", "r") as f:
         test_data = json.load(f)
 
     # Access a specific test case by ID
     test_id = "3"
-    query = test_data['testCases'][test_id]
+    query = test_data["testCases"][test_id]
     print(f"Running test: {query['description']}")
 
     # Update a test result by ID
-    test_data['testCases'][test_id]['result'] = "N/A"
+    test_data["testCases"][test_id]["result"] = "N/A"
 
     # Save the updated results
-    with open('cases/test_cases.json', 'w') as f:
+    with open("cases/test_cases.json", "w") as f:
         json.dump(test_data, f, indent=2)
 
     # query = input("Enter a query: ")
@@ -171,7 +171,9 @@ if __name__ == "__main__":
     print("interpreted_query: ", interpreted_query)
 
     # Determine the agents to use
-    agent_sequence, agent_states = determine_agents(interpreted_query, manager_agent, agent_map)
+    agent_sequence, agent_states = determine_agents(
+        interpreted_query, manager_agent, agent_map
+    )
     print("agent_sequence: ", agent_sequence)
     print("agent_states: ", agent_states)
 

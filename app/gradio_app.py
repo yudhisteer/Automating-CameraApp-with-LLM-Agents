@@ -1,16 +1,17 @@
-from src.utils.config_loader import load_config
-from src.tools.tools import *
+import json
+
 from src.agents.assistant_agent import create_assistant_agent
 from src.agents.user_proxy_agent import create_user_proxy_agent
+from src.tools.tools import *
 from src.utils.agent_utils import (
-    register_agent_functions,
-    interpret_query,
     determine_agents,
-    process_sequential_chats,
-    run_workflow,
+    interpret_query,
     launch_chat,
+    process_sequential_chats,
+    register_agent_functions,
+    run_workflow,
 )
-import json
+from src.utils.config_loader import load_config
 
 filter_dict = {"model": "gpt-4o-mini"}
 llm_config = {"config_list": load_config(filter_dict)}
@@ -93,7 +94,6 @@ take_video_agent = create_assistant_agent(
 )
 
 
-
 interpreter_agent = create_assistant_agent(
     name="interpreter_agent",
     sys_msg="interpreter_agent_msg.txt",
@@ -121,13 +121,38 @@ if __name__ == "__main__":
     agent_functions = [
         (open_camera, open_camera_agent, "open_camera", "Open the camera"),
         (close_camera, close_camera_agent, "close_camera", "Close the camera"),
-        (minimize_camera, minimize_camera_agent, "minimize_camera", "Minimize the camera"),
+        (
+            minimize_camera,
+            minimize_camera_agent,
+            "minimize_camera",
+            "Minimize the camera",
+        ),
         (restore_camera, restore_camera_agent, "restore_camera", "Restore the camera"),
-        (set_automatic_framing, set_automatic_framing_agent, "set_automatic_framing", "Set automatic framing to on or off"),
-        (set_blur_type, set_blur_type_agent, "set_blur_type", "Set blur type to standard or portrait"),
-        (set_background_effects, set_background_effects_agent, "set_background_effects", "Set background effects to on or off"),
+        (
+            set_automatic_framing,
+            set_automatic_framing_agent,
+            "set_automatic_framing",
+            "Set automatic framing to on or off",
+        ),
+        (
+            set_blur_type,
+            set_blur_type_agent,
+            "set_blur_type",
+            "Set blur type to standard or portrait",
+        ),
+        (
+            set_background_effects,
+            set_background_effects_agent,
+            "set_background_effects",
+            "Set background effects to on or off",
+        ),
         (switch_camera, switch_camera_agent, "switch_camera", "Switch between cameras"),
-        (camera_mode, camera_mode_agent, "camera_mode", "Switch between photo and video mode"),
+        (
+            camera_mode,
+            camera_mode_agent,
+            "camera_mode",
+            "Switch between photo and video mode",
+        ),
         (take_photo, take_photo_agent, "take_photo", "Take a photo"),
         (take_video, take_video_agent, "take_video", "Take a video"),
     ]
@@ -149,19 +174,19 @@ if __name__ == "__main__":
     }
 
     # Load the test cases
-    with open('cases/test_cases.json', 'r') as f:
+    with open("cases/test_cases.json", "r") as f:
         test_data = json.load(f)
 
     # Access a specific test case by ID
     test_id = "4"
-    query = test_data['testCases'][test_id]
+    query = test_data["testCases"][test_id]
     print(f"Running test: {query['description']}")
 
     # Update a test result by ID
-    test_data['testCases'][test_id]['result'] = "N/A"
+    test_data["testCases"][test_id]["result"] = "N/A"
 
     # Save the updated results
-    with open('cases/test_cases.json', 'w') as f:
+    with open("cases/test_cases.json", "w") as f:
         json.dump(test_data, f, indent=2)
 
     # query = input("Enter a query: ")
@@ -171,7 +196,9 @@ if __name__ == "__main__":
     print("interpreted_query: ", interpreted_query)
 
     # Determine the agents to use
-    agent_sequence, agent_states = determine_agents(interpreted_query, manager_agent, agent_map)
+    agent_sequence, agent_states = determine_agents(
+        interpreted_query, manager_agent, agent_map
+    )
     print("agent_sequence: ", agent_sequence)
     print("agent_states: ", agent_states)
 
@@ -191,12 +218,13 @@ if __name__ == "__main__":
     # launch_chat(interpreter_agent, manager_agent, agent_map, user_proxy_agent)
 
     import argparse
+
     import uvicorn
-    
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", type=str, default="0.0.0.0")
     parser.add_argument("--port", type=int, default=7860)
     args = parser.parse_args()
-    
+
     app = launch_chat(interpreter_agent, manager_agent, agent_map, user_proxy_agent)
     uvicorn.run(app, host=args.host, port=args.port)

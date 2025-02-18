@@ -1,10 +1,10 @@
+import subprocess
 import sys
 import time
-import subprocess
+
 from pywinauto import Application
 
 from src.tools.tools import *
-
 
 if __name__ == "__main__":
     open_camera()
@@ -29,22 +29,21 @@ if __name__ == "__main__":
     # time.sleep(1)
     # set_automatic_framing()  # Toggle current state
 
-    #switch_camera()
+    # switch_camera()
     # camera_mode('video')
     # camera_mode('photo')
     # take_photo()
     # take_video(5)
     # open_system_menu()
     # open_video_settings()
-    #options = get_video_quality_options()
-    switch_camera('FFC') # switch to 'FFC' or 'RFC'
+    # options = get_video_quality_options()
+    switch_camera("FFC")  # switch to 'FFC' or 'RFC'
     current_type, message = get_current_camera()
     print(f"Current camera: {current_type} ({message})")
     # switch_camera('RFC') # switch to 'FFC' or 'RFC'
     # current_type, message = get_current_camera()
     # print(f"Current camera: {current_type} ({message})")
-    #print(window.print_control_identifiers())
+    # print(window.print_control_identifiers())
     # switch_camera('FFC') # switch to 'FFC' or 'RFC'
     # switch_camera('RFC') # switch to 'FFC' or 'RFC'
     # #set_video_quality('1440p 16:9 30fps')
-    

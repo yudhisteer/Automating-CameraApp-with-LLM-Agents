@@ -1,18 +1,18 @@
-from src.utils.config_loader import load_config
-from src.tools.tools import *
-from src.agents.assistant_agent import create_assistant_agent
-from src.agents.user_proxy_agent import create_user_proxy_agent
-from src.utils.agent_utils import (
-    register_agent_functions,
-    interpret_query,
-    determine_agents,
-    process_sequential_chats,
-    run_workflow,
-    launch_chat,
-)
-import json
 import argparse
 import json
+
+from src.agents.assistant_agent import create_assistant_agent
+from src.agents.user_proxy_agent import create_user_proxy_agent
+from src.tools.tools import *
+from src.utils.agent_utils import (
+    determine_agents,
+    interpret_query,
+    launch_chat,
+    process_sequential_chats,
+    register_agent_functions,
+    run_workflow,
+)
+from src.utils.config_loader import load_config
 
 filter_dict = {"model": "gpt-4o-mini"}
 llm_config = {"config_list": load_config(filter_dict)}
@@ -94,8 +94,6 @@ take_video_agent = create_assistant_agent(
     function_map={"take_video": take_video},
 )
 
-
-
 interpreter_agent = create_assistant_agent(
     name="interpreter_agent",
     sys_msg="interpreter_agent_msg.txt",
@@ -108,14 +106,12 @@ manager_agent = create_assistant_agent(
     llm_config=llm_config,
 )
 
-
 user_proxy_agent = create_user_proxy_agent(
     name="user_proxy_agent",
     sys_msg="user_proxy_agent_msg.txt",
     llm_config=llm_config,
     human_input_mode="NEVER",
 )
-
 
 
 if __name__ == "__main__":
@@ -135,29 +131,29 @@ if __name__ == "__main__":
         --list_tests           Display all available test cases with their IDs and descriptions
         --save_results         Save test results to the test_cases.json file
         --force_status STATUS  Force a specific test result status ("Pass" or "Fail")
-        
+
     Examples:
         # List all available test cases
         python app.py --list_tests
-        
+
         # Run a specific test case
         python app.py --test_id 3
-        
+
         # Run a test case and save results (auto-determine pass/fail)
         python app.py --test_id 3 --save_results
-        
+
         # Run a test case and force it to be marked as passed
         python app.py --test_id 3 --save_results --force_status Pass
-        
+
         # Run a test case and force it to be marked as failed
         python app.py --test_id 3 --save_results --force_status Fail
-        
+
         # Run a custom query without saving results
         python app.py --query "Open the camera and set blur to portrait"
-        
+
         # Launch interactive mode
         python app.py --interactive
-        
+
     Notes:
         - If no options are provided, interactive mode is launched by default
         - Test cases are loaded from cases/test_cases.json
@@ -165,17 +161,27 @@ if __name__ == "__main__":
         1. If the test case has an 'expected_result' field, pass/fail is determined automatically
         2. If no 'expected_result' exists, you'll be prompted to manually confirm if the test passed
     """
-    # Create argument parser
-    parser = argparse.ArgumentParser(description='Camera Control Application')
-    
+    # args parser
+    parser = argparse.ArgumentParser(description="Camera Control Application")
+
     # Add arguments
-    parser.add_argument('--test_id', type=str, help='Test case ID to run')
-    parser.add_argument('--query', type=str, help='Custom query to run')
-    parser.add_argument('--interactive', action='store_true', help='Launch interactive chat mode')
-    parser.add_argument('--list_tests', action='store_true', help='List available test cases')
-    parser.add_argument('--save_results', action='store_true', help='Save test results to file')
-    parser.add_argument('--force_status', choices=['Pass', 'Fail'], help='Force a specific pass/fail status')
-    
+    parser.add_argument("--test_id", type=str, help="Test case ID to run")
+    parser.add_argument("--query", type=str, help="Custom query to run")
+    parser.add_argument(
+        "--interactive", action="store_true", help="Launch interactive chat mode"
+    )
+    parser.add_argument(
+        "--list_tests", action="store_true", help="List available test cases"
+    )
+    parser.add_argument(
+        "--save_results", action="store_true", help="Save test results to file"
+    )
+    parser.add_argument(
+        "--force_status",
+        choices=["Pass", "Fail"],
+        help="Force a specific pass/fail status",
+    )
+
     # Parse arguments
     args = parser.parse_args()
 
@@ -214,25 +220,25 @@ if __name__ == "__main__":
     test_data = None
     if args.test_id or args.list_tests:
         try:
-            with open('cases/test_cases.json', 'r') as f:
+            with open("cases/test_cases.json", "r") as f:
                 test_data = json.load(f)
         except FileNotFoundError:
             print("Error: Test cases file not found.")
             exit(1)
-    
+
     # List test cases and exit if requested
     if args.list_tests and test_data:
         print("Available test cases:")
-        for id, test in test_data['testCases'].items():
+        for id, test in test_data["testCases"].items():
             print(f"ID: {id} - {test.get('description', 'No description')}")
         exit(0)
-    
+
     # Determine the query to run
     query = None
     if args.test_id and test_data:
-        if args.test_id in test_data['testCases']:
-            test_case = test_data['testCases'][args.test_id]
-            query = test_case['query'] if 'query' in test_case else test_case
+        if args.test_id in test_data["testCases"]:
+            test_case = test_data["testCases"][args.test_id]
+            query = test_case["query"] if "query" in test_case else test_case
             print(f"Running test: {test_case.get('description', 'No description')}")
         else:
             print(f"Error: Test ID {args.test_id} not found.")
@@ -240,19 +246,23 @@ if __name__ == "__main__":
     elif args.query:
         query = args.query
         print(f"Running custom query: {query}")
-    
+
     # Execute the query if we have one
     if query and not args.interactive:
-        msg_type, iterations, interpreted_query = interpret_query(query, interpreter_agent)
+        msg_type, iterations, interpreted_query = interpret_query(
+            query, interpreter_agent
+        )
         print("msg_type: ", msg_type)
         print("iterations: ", iterations)
         print("interpreted_query: ", interpreted_query)
 
         # Determine the agents to use
-        agent_sequence, agent_states = determine_agents(interpreted_query, manager_agent, agent_map)
+        agent_sequence, agent_states = determine_agents(
+            interpreted_query, manager_agent, agent_map
+        )
         print("agent_sequence: ", agent_sequence)
         print("agent_states: ", agent_states)
-        
+
         # Run the workflow
         result = run_workflow(
             query=interpreted_query,
@@ -260,16 +270,18 @@ if __name__ == "__main__":
             agent_sequence=agent_sequence,
             agent_states=agent_states,
             agent_map=agent_map,
-            user_proxy_agent=user_proxy_agent
+            user_proxy_agent=user_proxy_agent,
         )
-        
+
         # Determine if test passed based on expected results or user override
         if args.force_status:
             test_status = args.force_status
         else:
             test_status = "Pass"
             if args.test_id and test_data:
-                expected_result = test_data['testCases'][args.test_id].get('expected_result')
+                expected_result = test_data["testCases"][args.test_id].get(
+                    "expected_result"
+                )
                 if expected_result:
                     # Compare actual result with expected result
                     # This logic can be customized based on your specific requirements
@@ -279,16 +291,16 @@ if __name__ == "__main__":
                     # If no expected result is defined, ask user for manual verification
                     print(f"\nTest result: {result}")
                     user_input = input("Did the test pass? (y/n): ").strip().lower()
-                    test_status = "Pass" if user_input.startswith('y') else "Fail"
-        
+                    test_status = "Pass" if user_input.startswith("y") else "Fail"
+
         # Save results if requested
         if args.save_results and args.test_id and test_data:
-            test_data['testCases'][args.test_id]['result'] = result
-            test_data['testCases'][args.test_id]['status'] = test_status
-            with open('cases/test_cases.json', 'w') as f:
+            test_data["testCases"][args.test_id]["result"] = result
+            test_data["testCases"][args.test_id]["status"] = test_status
+            with open("cases/test_cases.json", "w") as f:
                 json.dump(test_data, f, indent=2)
             print(f"Results saved for test ID {args.test_id}: {test_status}")
-    
+
     # Launch interactive mode if requested or if no other action was specified
     if args.interactive or (not query and not args.list_tests):
         print("Starting interactive chat mode...")

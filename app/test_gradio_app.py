@@ -1,11 +1,14 @@
-from fastapi import FastAPI
-import gradio as gr
 import time
+
+import gradio as gr
+from fastapi import FastAPI
 from gradio.routes import mount_gradio_app
+
 
 def greet(name, intensity):
     time.sleep(5)  # Simulating processing time
     return "Hello, " + name + "!" * int(intensity)
+
 
 demo = gr.Interface(
     fn=greet,
@@ -23,7 +26,9 @@ app = mount_gradio_app(
 
 if __name__ == "__main__":
     import argparse
+
     import uvicorn
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", type=str)
     parser.add_argument("--port", type=int)

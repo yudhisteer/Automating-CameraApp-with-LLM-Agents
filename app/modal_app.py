@@ -1,8 +1,9 @@
-import modal
 import os
 import pathlib
 import shlex
 import subprocess
+
+import modal
 
 GRADIO_PORT = 8000
 
@@ -19,7 +20,9 @@ src_dir_local = os.path.join(current_dir, "src")
 src_dir_remote = "/root/src"
 
 if not os.path.exists(gradio_script_local_path):
-    raise RuntimeError(f"{fname} not found at {gradio_script_local_path}! Place the script with your gradio app in the same directory.")
+    raise RuntimeError(
+        f"{fname} not found at {gradio_script_local_path}! Place the script with your gradio app in the same directory."
+    )
 
 if not os.path.exists(src_dir_local):
     raise RuntimeError(f"src directory not found at {src_dir_local}!")
@@ -28,13 +31,16 @@ if not os.path.exists(src_dir_local):
 requirements_path = os.path.join(current_dir, "requirements.txt")
 
 # Create the image with all needed files and dependencies
-image = (modal.Image.debian_slim(python_version="3.11")
-        .pip_install("gradio")
-        .pip_install_from_requirements(requirements_path)
-        .add_local_file(local_path=gradio_script_local_path, 
-                        remote_path=gradio_script_remote_path)
-        .add_local_dir(local_path=src_dir_local,
-                       remote_path=src_dir_remote))
+image = (
+    modal.Image.debian_slim(python_version="3.11")
+    .pip_install("gradio")
+    .pip_install_from_requirements(requirements_path)
+    .add_local_file(
+        local_path=gradio_script_local_path, remote_path=gradio_script_remote_path
+    )
+    .add_local_dir(local_path=src_dir_local, remote_path=src_dir_remote)
+)
+
 
 @app.function(
     image=image,
