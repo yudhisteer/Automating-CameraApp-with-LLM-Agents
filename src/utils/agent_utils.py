@@ -382,8 +382,8 @@ def launch_chat(interpreter_agent, manager_agent, agent_map, user_proxy_agent):
         agent_map,
         user_proxy_agent
     )
-    chat_interface.queue(concurrency_count=10)  # Allow 10 concurrent users
-    chat_interface.launch(server_name="0.0.0.0", share=False)
+    # chat_interface.queue(concurrency_count=10)  # Allow 10 concurrent users
+    chat_interface.launch(share=False)
 
     # Create FastAPI app and mount Gradio
     # web_app = FastAPI()
