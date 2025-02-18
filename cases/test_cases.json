@@ -34,7 +34,8 @@
     },
     "9": {
       "description": "switch off autoframing",
-      "result": "N/A"
+      "result": null,
+      "status": "Pass"
     }
   }
 }

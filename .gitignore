@@ -7,6 +7,8 @@ __pycache__/
 *.so
 
 # Distribution / packaging
+.gradio/
+.hooks/
 .Python
 build/
 develop-eggs/

@@ -189,14 +189,3 @@ if __name__ == "__main__":
     # )
 
     launch_chat(interpreter_agent, manager_agent, agent_map, user_proxy_agent)
-
-    # import argparse
-    # import uvicorn
-    
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument("--host", type=str, default="0.0.0.0")
-    # parser.add_argument("--port", type=int, default=7860)
-    # args = parser.parse_args()
-    
-    # app = launch_chat(interpreter_agent, manager_agent, agent_map, user_proxy_agent)
-    # uvicorn.run(app, host=args.host, port=args.port)
