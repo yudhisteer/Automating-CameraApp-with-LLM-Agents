@@ -320,6 +320,7 @@ def process_message(message: str, chat_history, interpreter_agent, manager_agent
                     query=interpreted_query,
                     iterations=iterations,
                     agent_sequence=agent_sequence,
+                    agent_states=agent_states,
                     agent_map=agent_map,
                     user_proxy_agent=user_proxy_agent
                 )
