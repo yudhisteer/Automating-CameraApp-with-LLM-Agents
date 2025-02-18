@@ -3,6 +3,9 @@ from autogen import AssistantAgent, UserProxyAgent
 from typing import Tuple
 from src.tools.tools import open_camera, close_camera
 import gradio as gr
+from fastapi import FastAPI
+import time
+from gradio.routes import mount_gradio_app
 
 
 def register_agent_functions(
@@ -380,4 +383,14 @@ def launch_chat(interpreter_agent, manager_agent, agent_map, user_proxy_agent):
         user_proxy_agent
     )
     chat_interface.queue(concurrency_count=10)  # Allow 10 concurrent users
-    chat_interface.launch(server_name="0.0.0.0", share=True)
+    chat_interface.launch(server_name="0.0.0.0", share=False)
+
+    # Create FastAPI app and mount Gradio
+    # web_app = FastAPI()
+    # app = mount_gradio_app(
+    #     app=web_app,
+    #     blocks=chat_interface,
+    #     path="/"
+    # )
+    
+    # return app

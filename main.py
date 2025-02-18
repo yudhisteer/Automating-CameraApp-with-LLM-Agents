@@ -153,7 +153,7 @@ if __name__ == "__main__":
         test_data = json.load(f)
 
     # Access a specific test case by ID
-    test_id = "4"
+    test_id = "3"
     query = test_data['testCases'][test_id]
     print(f"Running test: {query['description']}")
 
@@ -179,13 +179,24 @@ if __name__ == "__main__":
     # process_sequential_chats(interpreted_query, agent_sequence, agent_states, agent_map, user_proxy_agent)
 
     # Run the workflow
-    # run_workflow(
-    #     query=interpreted_query,
-    #     iterations=iterations,
-    #     agent_sequence=agent_sequence,
-    #     agent_states=agent_states,
-    #     agent_map=agent_map,
-    #     user_proxy_agent=user_proxy_agent
-    # )
+    run_workflow(
+        query=interpreted_query,
+        iterations=iterations,
+        agent_sequence=agent_sequence,
+        agent_states=agent_states,
+        agent_map=agent_map,
+        user_proxy_agent=user_proxy_agent
+    )
 
     launch_chat(interpreter_agent, manager_agent, agent_map, user_proxy_agent)
+
+    # import argparse
+    # import uvicorn
+    
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument("--host", type=str, default="0.0.0.0")
+    # parser.add_argument("--port", type=int, default=7860)
+    # args = parser.parse_args()
+    
+    # app = launch_chat(interpreter_agent, manager_agent, agent_map, user_proxy_agent)
+    # uvicorn.run(app, host=args.host, port=args.port)
