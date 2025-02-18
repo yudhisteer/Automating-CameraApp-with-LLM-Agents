@@ -99,9 +99,58 @@ def interpret_query(
     return parse_interpreter_response(response)
 
 
+# def determine_agents(
+#     task: str, decision_agent: ConversableAgent, agent_map: dict
+# ) -> Tuple[list, list]:
+#     """
+#     Determine the sequence of agents needed to complete a task.
+
+#     Args:
+#         task: The task to be completed
+#         decision_agent: The agent that will determine the sequence
+#         agent_map: Dictionary mapping agent names to actual agent objects
+#                   (e.g., {"data_fetcher_agent": data_fetcher})
+
+#     Returns:
+#         list: A list of agent objects in the order they should be executed
+#     """
+#     try:
+#         message = {
+#             "role": "user",
+#             "content": f"""Based on this task: '{task}', determine the sequence of agents needed to complete it.
+#                 Please respond with a Python list containing the required agents in order.
+#                 Use only these options:
+#                 {chr(10).join(f'- {agent}' for agent in agent_map.keys())}
+                
+#                 If no agents are needed or the task is complete, return an empty list."""
+#         }
+
+#         response = decision_agent.generate_reply([message])
+        
+#         try:
+#             agent_list = eval(response)
+#             if isinstance(agent_list, list):
+#                 if all(agent in agent_map for agent in agent_list):
+#                     return agent_list
+#                 else:
+#                     print(f"Invalid agent(s) in list: {agent_list}")
+#                     return []
+#             else:
+#                 print(f"Invalid response format: {response}")
+#                 return []
+#         except Exception as e:
+#             print(f"Error parsing response: {response}")
+#             print(f"Error details: {str(e)}")
+#             return []
+
+#     except Exception as e:
+#         print(f"Error in determine_agents: {str(e)}")
+#         return []
+
+
 def determine_agents(
     task: str, decision_agent: ConversableAgent, agent_map: dict
-) -> list:
+) -> Tuple[list, list]:
     """
     Determine the sequence of agents needed to complete a task.
 
@@ -112,46 +161,63 @@ def determine_agents(
                   (e.g., {"data_fetcher_agent": data_fetcher})
 
     Returns:
-        list: A list of agent objects in the order they should be executed
+        Tuple[list, list]: A tuple containing:
+            - List of agent names in order they should be executed
+            - List of agent names with explicit state parameters
     """
     try:
         message = {
             "role": "user",
             "content": f"""Based on this task: '{task}', determine the sequence of agents needed to complete it.
-                Please respond with a Python list containing the required agents in order.
-                Use only these options:
+                Analyze the task according to camera control operation requirements.
+                
+                Please respond with TWO Python lists:
+                1. Sequence: List of agent names in order
+                2. State: List of agent names with explicit state parameters
+                
+                Use only these agents:
                 {chr(10).join(f'- {agent}' for agent in agent_map.keys())}
                 
-                If no agents are needed or the task is complete, return an empty list."""
+                If no agents are needed or the task is complete, return two empty lists."""
         }
 
         response = decision_agent.generate_reply([message])
         
         try:
-            agent_list = eval(response)
-            if isinstance(agent_list, list):
-                if all(agent in agent_map for agent in agent_list):
-                    return agent_list
+            # Extract the two lists from the response
+            if "Sequence:" in response and "State:" in response:
+                sequence_part = response.split("Sequence:")[1].split("State:")[0].strip()
+                state_part = response.split("State:")[1].strip()
+                
+                agent_sequence = eval(sequence_part)
+                agent_states = eval(state_part)
+                
+                if isinstance(agent_sequence, list) and isinstance(agent_states, list):
+                    if all(agent in agent_map for agent in agent_sequence):
+                        return agent_sequence, agent_states
+                    else:
+                        print(f"Invalid agent(s) in list: {agent_sequence}")
+                        return [], []
                 else:
-                    print(f"Invalid agent(s) in list: {agent_list}")
-                    return []
+                    print(f"Invalid response format: {response}")
+                    return [], []
             else:
-                print(f"Invalid response format: {response}")
-                return []
+                print(f"Response missing Sequence or State: {response}")
+                return [], []
         except Exception as e:
             print(f"Error parsing response: {response}")
             print(f"Error details: {str(e)}")
-            return []
+            return [], []
 
     except Exception as e:
         print(f"Error in determine_agents: {str(e)}")
-        return []
-
+        return [], []
 
 
 def process_sequential_chats(
     query: str,
     agent_sequence: list,
+    agent_states: list,
     agent_map: dict,
     user_proxy_agent: UserProxyAgent,
 ) -> None:
@@ -161,12 +227,10 @@ def process_sequential_chats(
     """
     chat_configs = []
     original_command = query
-    
-    # Parse the sequence to determine intended actions
-    actions = parse_sequence_actions(agent_sequence)
+
     
     # Build chat configurations for each agent
-    for idx, (agent_name, intended_action) in enumerate(zip(agent_sequence, actions)):
+    for idx, (agent_name, intended_action) in enumerate(zip(agent_sequence, agent_states)):
         step_context = (
             f"Original command: {original_command}\n"
             f"Your role: You are step {idx + 1} in a {len(agent_sequence)}-step sequence.\n"
@@ -190,39 +254,14 @@ def process_sequential_chats(
 
     return user_proxy_agent.initiate_chats(chat_configs)
 
-def parse_sequence_actions(agent_sequence: list) -> list:
-    """
-    Analyze the agent sequence to determine the specific action each agent should take.
-    Only tracks state for toggleable settings, handles other agents generically.
-    """
-    actions = []
-    # Only track state for agents that need it
-    state_tracking = {
-        "set_automatic_framing_agent": {"state": False, "name": "automatic framing"},
-        "set_background_effects_agent": {"state": False, "name": "background effects"}
-    }
-    
-    for agent in agent_sequence:
-        if agent in state_tracking:
-            # Handle state-tracking agents
-            state_tracking[agent]["state"] = not state_tracking[agent]["state"]
-            actions.append(
-                f"Set {state_tracking[agent]['name']} to "
-                f"{'ON' if state_tracking[agent]['state'] else 'OFF'}"
-            )
-        else:
-            # Handle all other agents generically
-            # Convert agent name to readable format (e.g., "open_camera_agent" -> "Open camera")
-            action_name = agent.replace("_agent", "").replace("_", " ").capitalize()
-            actions.append(action_name)
-    
-    return actions
+
 
 
 def run_workflow(
     query: str,
     iterations: int,
     agent_sequence: list,
+    agent_states: list,
     agent_map: dict,
     user_proxy_agent: UserProxyAgent
 ) -> None:
@@ -245,7 +284,7 @@ def run_workflow(
         for i in range(iterations):
             print(f"\nIteration {i+1}/{iterations}:")
             try:
-                process_sequential_chats(query, agent_sequence, agent_map, user_proxy_agent)
+                process_sequential_chats(query, agent_sequence, agent_states, agent_map, user_proxy_agent)
             except Exception as e:
                 print(f"Error in iteration {i+1}: {str(e)}")
                 continue
@@ -269,7 +308,7 @@ def process_message(message: str, chat_history, interpreter_agent, manager_agent
         chat_history.append({"role": "assistant", "content": interpretation})
         
         # Determine agent sequence
-        agent_sequence = determine_agents(interpreted_query, manager_agent, agent_map)
+        agent_sequence, agent_states = determine_agents(interpreted_query, manager_agent, agent_map)
         sequence_msg = f"""Agent Sequence:
 {', '.join(agent_sequence) if agent_sequence else 'No agents needed'}"""
         chat_history.append({"role": "assistant", "content": sequence_msg})

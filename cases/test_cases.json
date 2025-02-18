@@ -29,7 +29,11 @@
       "result": "N/A"
     },
     "8": {
-      "description": "open cameraApp, switch to FFC in video mode,. disable autoframing and enable nackground blur,. minimize and restore camera app 5 times.",
+      "description": "open cameraApp, switch to FFC in video mode,. disable autoframing and enable background blur,. minimize and restore camera app 5 times.",
+      "result": "N/A"
+    },
+    "9": {
+      "description": "switch off autoframing",
       "result": "N/A"
     }
   }

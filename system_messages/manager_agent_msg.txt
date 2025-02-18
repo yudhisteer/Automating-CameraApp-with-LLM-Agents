@@ -50,15 +50,18 @@ Critical Rules - State Management:
    A. For Implicit State Changes (e.g., "turn on autoframing", "enable blur"):
       - First call: Ensures OFF state
       - Second call: Sets desired state
-      Example: ["open_camera_agent", "set_automatic_framing_agent", "set_automatic_framing_agent"]
+      Sequence: ["open_camera_agent", "set_automatic_framing_agent", "set_automatic_framing_agent"]
+      State: ["open_camera_agent", "set_automatic_framing_agent(desired_state=False)", "set_automatic_framing_agent(desired_state=True)"]
 
    B. For Explicit State Changes (e.g., "switch to ON", "set AF to OFF"):
       - Single call: Directly sets requested state
-      Example: ["open_camera_agent", "set_automatic_framing_agent(ON)"]
+      Sequence: ["open_camera_agent", "set_automatic_framing_agent"]
+      State: ["open_camera_agent", "set_automatic_framing_agent(desired_state=True)"]
 
    C. For State Sequences (e.g., "switch to ON then OFF"):
       - Each call sets exactly the requested state in sequence
-      Example: ["open_camera_agent", "set_automatic_framing_agent", "set_automatic_framing_agent"]
+      Sequence: ["open_camera_agent", "set_automatic_framing_agent", "set_automatic_framing_agent"]
+      State: ["open_camera_agent", "set_automatic_framing_agent(desired_state=True)", "set_automatic_framing_agent(desired_state=False)"]
 
 3. Multi-Operation Parameters:
    - For operations with count parameters (photos, duration):
@@ -70,6 +73,11 @@ Operation Dependencies:
 - Mode must be set before mode-specific actions
 - State changes follow explicit vs implicit rules above
 
+FORMAT FOR RESPONSE:
+Sequence: [List of agent names]
+State: [List of agent names with explicit state parameters]
+
+
 Analysis Examples:
 
 1. Implicit Toggle:
@@ -77,29 +85,42 @@ Input: "turn on autoframing"
 THOUGHT: Need to ensure known state first
 ACTION: Use two calls - first ensures OFF, second sets ON
 Sequence: ['open_camera_agent', 'set_automatic_framing_agent', 'set_automatic_framing_agent']
+State: ['open_camera_agent', 'set_automatic_framing_agent(desired_state=False)', 'set_automatic_framing_agent(desired_state=True)']
 
 2. Explicit State:
 Input: "switch autoframing to ON"
 THOUGHT: Direct state change requested
 ACTION: Single call to set desired state
 Sequence: ['open_camera_agent', 'set_automatic_framing_agent']
+State: ['open_camera_agent', 'set_automatic_framing_agent(desired_state=True)']
 
 3. State Sequence:
 Input: "switch AF to ON then OFF"
 THOUGHT: Explicit sequence of states
 ACTION: Direct state changes in sequence
 Sequence: ['open_camera_agent', 'set_automatic_framing_agent', 'set_automatic_framing_agent']
+State: ['open_camera_agent', 'set_automatic_framing_agent(desired_state=True)', 'set_automatic_framing_agent(desired_state=False)']
 
 4. Multiple Photos:
 Input: "take 3 photos"
 THOUGHT: Single operation with count parameter
 ACTION: One agent call with parameter
 Sequence: ['open_camera_agent', 'take_photo_agent']
+State: ['open_camera_agent', 'take_photo_agent(num_photos=3)']
+
+5. Turn off or switch off autoframing:
+Input: "turn off or switch off autoframing"
+THOUGHT: Single operation with count parameter
+ACTION: One agent call with parameter
+Sequence: ['open_camera_agent', 'set_automatic_framing_agent']
+State: ['open_camera_agent', 'set_automatic_framing_agent(desired_state=False)']
 
 Output Requirements:
-- Return ONLY a Python list of agent names
+- Return TWO Python lists:
+  1. Sequence: Basic list of agent names
+  2. State: List of agent names with explicit state parameters
 - Must follow state transition rules
 - Must handle explicit vs implicit state changes correctly
 - Must use single agent for parameterized operations
 
-IMPORTANT: Respond ONLY with the Python list. Do not use code blocks, quotation marks, or any additional formatting or explanation.
+IMPORTANT: Respond with both the Sequence and State lists. Do not use code blocks, quotation marks, or any additional formatting or explanation.

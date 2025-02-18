@@ -153,7 +153,7 @@ if __name__ == "__main__":
         test_data = json.load(f)
 
     # Access a specific test case by ID
-    test_id = "2"
+    test_id = "4"
     query = test_data['testCases'][test_id]
     print(f"Running test: {query['description']}")
 
@@ -171,17 +171,19 @@ if __name__ == "__main__":
     print("interpreted_query: ", interpreted_query)
 
     # Determine the agents to use
-    agent_sequence = determine_agents(interpreted_query, manager_agent, agent_map)
+    agent_sequence, agent_states = determine_agents(interpreted_query, manager_agent, agent_map)
     print("agent_sequence: ", agent_sequence)
+    print("agent_states: ", agent_states)
 
     # open_camera()
-    # process_sequential_chats(interpreted_query, agent_sequence, agent_map, user_proxy_agent)
+    # process_sequential_chats(interpreted_query, agent_sequence, agent_states, agent_map, user_proxy_agent)
 
     # Run the workflow
     run_workflow(
         query=interpreted_query,
         iterations=iterations,
         agent_sequence=agent_sequence,
+        agent_states=agent_states,
         agent_map=agent_map,
         user_proxy_agent=user_proxy_agent
     )
