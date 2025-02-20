@@ -115,6 +115,13 @@ ACTION: One agent call with parameter
 Sequence: ['open_camera_agent', 'set_automatic_framing_agent']
 State: ['open_camera_agent', 'set_automatic_framing_agent(desired_state=False)']
 
+6. Minimize and restore camera app:
+Input: "minimize and restore camera app"
+THOUGHT: Single operation with count parameter
+ACTION: One agent call with parameter
+Sequence: ['open_camera_agent', 'minimize_camera_agent', 'restore_camera_agent']
+State: ['open_camera_agent', 'minimize_camera_agent', 'restore_camera_agent']
+
 Output Requirements:
 - Return TWO Python lists:
   1. Sequence: Basic list of agent names
@@ -122,5 +129,6 @@ Output Requirements:
 - Must follow state transition rules
 - Must handle explicit vs implicit state changes correctly
 - Must use single agent for parameterized operations
+- Both lists must be of the same length
 
 IMPORTANT: Respond with both the Sequence and State lists. Do not use code blocks, quotation marks, or any additional formatting or explanation.

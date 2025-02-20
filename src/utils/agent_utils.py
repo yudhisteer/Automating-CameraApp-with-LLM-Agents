@@ -283,9 +283,6 @@ def run_workflow(
         user_proxy_agent: UserProxyAgent instance
     """
     try:
-        # # First open the camera
-        # print("\nOpening camera...")
-        # open_camera()
 
         # Execute the task for specified iterations
         for i in range(iterations):
@@ -302,63 +299,46 @@ def run_workflow(
         print(f"Error during task execution: {str(e)}")
 
 
-def process_message(
-    message: str,
-    chat_history,
-    interpreter_agent,
-    manager_agent,
-    agent_map,
-    user_proxy_agent,
-):
+def process_message(message: str, chat_history, interpreter_agent, manager_agent, agent_map, user_proxy_agent):
     """Process a single message through the workflow and return formatted responses."""
     try:
         # First, show the user's message
         chat_history.append({"role": "user", "content": message})
-
+        
         # Interpret the query
-        msg_type, iterations, interpreted_query = interpret_query(
-            message, interpreter_agent
-        )
+        msg_type, iterations, interpreted_query = interpret_query(message, interpreter_agent)
         interpretation = f"""Query Interpretation:
 • Type: {msg_type}
 • Iterations: {iterations}
 • Interpreted as: {interpreted_query}"""
         chat_history.append({"role": "assistant", "content": interpretation})
-
+        
         # Determine agent sequence
-        agent_sequence, agent_states = determine_agents(
-            interpreted_query, manager_agent, agent_map
-        )
+        agent_sequence, agent_states = determine_agents(interpreted_query, manager_agent, agent_map)
         sequence_msg = f"""Agent Sequence:
 {', '.join(agent_sequence) if agent_sequence else 'No agents needed'}"""
         chat_history.append({"role": "assistant", "content": sequence_msg})
-
+        
         # Run the workflow if we have agents to execute
         if agent_sequence:
             try:
+                print("Running workflow...")
                 run_workflow(
                     query=interpreted_query,
                     iterations=iterations,
                     agent_sequence=agent_sequence,
                     agent_states=agent_states,
                     agent_map=agent_map,
-                    user_proxy_agent=user_proxy_agent,
+                    user_proxy_agent=user_proxy_agent
                 )
-                chat_history.append(
-                    {"role": "assistant", "content": "Task executed successfully!"}
-                )
+                chat_history.append({"role": "assistant", "content": "Task executed successfully!"})
             except Exception as e:
-                chat_history.append(
-                    {"role": "assistant", "content": f"Error executing task: {str(e)}"}
-                )
-
+                chat_history.append({"role": "assistant", "content": f"Error executing task: {str(e)}"})
+        
         return chat_history
     except Exception as e:
-        chat_history.append(
-            {"role": "assistant", "content": f"Error processing message: {str(e)}"}
-        )
+        chat_history.append({"role": "assistant", "content": f"Error processing message: {str(e)}"})
         return chat_history
-
 
 def create_chat_interface(
     interpreter_agent, manager_agent, agent_map, user_proxy_agent
@@ -401,17 +381,9 @@ def create_chat_interface(
 def launch_chat(interpreter_agent, manager_agent, agent_map, user_proxy_agent):
     """Launch the chat interface."""
     chat_interface = create_chat_interface(
-        interpreter_agent, manager_agent, agent_map, user_proxy_agent
+        interpreter_agent,
+        manager_agent,
+        agent_map,
+        user_proxy_agent
     )
-    # chat_interface.queue(concurrency_count=10)  # Allow 10 concurrent users
     chat_interface.launch(share=False)
-
-    # Create FastAPI app and mount Gradio
-    # web_app = FastAPI()
-    # app = mount_gradio_app(
-    #     app=web_app,
-    #     blocks=chat_interface,
-    #     path="/"
-    # )
-
-    # return app

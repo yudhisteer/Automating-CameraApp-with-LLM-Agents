@@ -153,7 +153,7 @@ if __name__ == "__main__":
         test_data = json.load(f)
 
     # Access a specific test case by ID
-    test_id = "3"
+    test_id = "2"
     query = test_data["testCases"][test_id]
     print(f"Running test: {query['description']}")
 
