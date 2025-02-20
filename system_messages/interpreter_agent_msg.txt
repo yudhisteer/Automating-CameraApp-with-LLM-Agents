@@ -16,6 +16,22 @@ TYPE: [TASK|CONVERSATION|UNCLEAR]
 ITERATIONS: [Number of times to execute, default 1]
 QUERY: [Clear English description of all steps]
 
+Example 0:
+Input: "What can you do?"
+
+TYPE: CONVERSATION
+ITERATIONS: 1
+QUERY: What can you do?
+
+Example 0:
+Input: "Can you list all test cases? or What are the options?"
+
+TYPE: CONVERSATION
+ITERATIONS: 1
+QUERY: Can you list all test cases?
+
+
+
 Example 1:
 Input: "Open Camera App -> switch to front camera -> switch to video recording -> turn on autoframing"
 

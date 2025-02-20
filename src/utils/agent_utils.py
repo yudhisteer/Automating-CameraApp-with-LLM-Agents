@@ -299,7 +299,17 @@ def run_workflow(
         print(f"Error during task execution: {str(e)}")
 
 
-def process_message(message: str, chat_history, interpreter_agent, manager_agent, agent_map, user_proxy_agent):
+def handle_conversation(user_input: str, conversation_agent):
+    """Handle a conversation with the conversation agent."""
+    try:
+        prompt = f"Current message: {user_input}\n\nPlease respond in a friendly and context-aware manner."
+        message = [{"role": "user", "content": prompt}]
+        response = conversation_agent.generate_reply(message)
+        return response
+    except Exception as e:
+        return f"Error in conversation: {str(e)}"
+
+def process_message(message: str, chat_history, interpreter_agent, manager_agent, agent_map, user_proxy_agent, conversation_agent):
     """Process a single message through the workflow and return formatted responses."""
     try:
         # First, show the user's message
@@ -307,16 +317,29 @@ def process_message(message: str, chat_history, interpreter_agent, manager_agent
         
         # Interpret the query
         msg_type, iterations, interpreted_query = interpret_query(message, interpreter_agent)
+
+        if msg_type == "CONVERSATION":
+            # Handle the conversation
+            response = handle_conversation(message, conversation_agent)
+            chat_history.append({"role": "assistant", "content": response})
+            return chat_history
+
+        # Show the query interpretation
         interpretation = f"""Query Interpretation:
-• Type: {msg_type}
-• Iterations: {iterations}
-• Interpreted as: {interpreted_query}"""
+        • Type: {msg_type}
+        • Iterations: {iterations}
+        • Interpreted as: {interpreted_query}"""
+
+        # Add the query interpretation to chat history
         chat_history.append({"role": "assistant", "content": interpretation})
         
         # Determine agent sequence
         agent_sequence, agent_states = determine_agents(interpreted_query, manager_agent, agent_map)
-        sequence_msg = f"""Agent Sequence:
-{', '.join(agent_sequence) if agent_sequence else 'No agents needed'}"""
+
+        # Show the agent sequence
+        sequence_msg = f"""Agent Sequence: {', '.join(agent_sequence) if agent_sequence else 'No agents needed'}"""
+
+        # Add the agent sequence message to chat history
         chat_history.append({"role": "assistant", "content": sequence_msg})
         
         # Run the workflow if we have agents to execute
@@ -341,81 +364,75 @@ def process_message(message: str, chat_history, interpreter_agent, manager_agent
         return chat_history
 
 def create_chat_interface(
-    interpreter_agent, manager_agent, agent_map, user_proxy_agent
+    interpreter_agent, manager_agent, agent_map, user_proxy_agent, conversation_agent
 ):
-    """Create and configure the Gradio chat interface with enhanced styling."""
+    """Create a minimal, modern chat interface."""
     
-    # Custom CSS for better aesthetics
     custom_css = """
         .container {
-            max-width: 800px;
-            margin: auto;
+            max-width: 1000px;
+            margin: 40px auto;
             padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
-        .chat-message {
-            padding: 15px;
-            border-radius: 10px;
-            margin: 5px 0;
+        .chat-window {
+            border: 2px solid #eee;
+            border-radius: 20px;
+            padding: 20px;
+            background: white;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
         }
-        .user-message {
-            background-color: #e3f2fd;
-        }
-        .bot-message {
-            background-color: #f5f5f5;
-        }
-        .input-container {
+        .input-row {
+            display: flex;
+            gap: 12px;
             margin-top: 20px;
-            border-top: 1px solid #eee;
-            padding-top: 20px;
+            align-items: center;
+        }
+        .message-input input {
+            border: 2px solid #eee;
+            border-radius: 15px;
+            padding: 12px 20px;
+            font-size: 16px;
+            width: 100%;
+            height: 60px;
+            text-align: center;
+        }
+        .send-button {
+            background: #000;
+            color: white;
+            border-radius: 15px;
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            height: 50px;
         }
     """
 
     with gr.Blocks(css=custom_css) as chat_interface:
-        gr.Markdown(
-            """
-            # AI Assistant Chat
-            Welcome! I'm here to help you with your queries. Type your command below to get started.
-            """,
-            elem_classes="container"
-        )
-
-        chatbot = gr.Chatbot(
-            show_label=False,
-            height=500,
-            bubble_full_width=False,
-            type="messages",
-            elem_classes=["chat-message", "container"],
-            render=False,
-        )
-
-        with gr.Row(elem_classes="input-container"):
-            with gr.Column(scale=4):
-                msg = gr.Textbox(
-                    label="Message",
-                    placeholder="Type your message here...",
+        with gr.Column(elem_classes="container"):
+            with gr.Column(elem_classes="chat-window"):
+                chatbot = gr.Chatbot(
                     show_label=False,
-                    container=False,
-                    scale=1,
-                    min_width=600,
+                    height=500,
+                    bubble_full_width=False,
+                    type="messages",
+                    container=False
                 )
-            
-            with gr.Column(scale=1, min_width=100):
-                submit = gr.Button(
-                    "Send",
-                    variant="primary",
-                    size="lg",
-                )
-
-        with gr.Row():
-            clear = gr.ClearButton(
-                [msg, chatbot],
-                variant="secondary",
-                size="sm",
-                value="Clear chat"
-            )
-
-        # Add some spacing
-        gr.Markdown("<br>")
+                
+                with gr.Row(elem_classes="input-row"):
+                    msg = gr.Textbox(
+                        placeholder="Type your message here...",
+                        show_label=False,
+                        container=False,
+                        scale=8,
+                        elem_classes="message-input"
+                    )
+                    submit = gr.Button(
+                        "Send",
+                        scale=1,
+                        elem_classes="send-button"
+                    )
 
         def respond(message, chat_history):
             if message:
@@ -426,22 +443,23 @@ def create_chat_interface(
                     manager_agent,
                     agent_map,
                     user_proxy_agent,
+                    conversation_agent
                 )
             return "", chat_history
 
-        # Event handlers
         msg.submit(respond, [msg, chatbot], [msg, chatbot])
         submit.click(respond, [msg, chatbot], [msg, chatbot])
 
     return chat_interface
 
 
-def launch_chat(interpreter_agent, manager_agent, agent_map, user_proxy_agent, server_name="127.0.0.1"):
+def launch_chat(interpreter_agent, manager_agent, agent_map, user_proxy_agent, conversation_agent, server_name="127.0.0.1"):
     """Launch the chat interface."""
     chat_interface = create_chat_interface(
         interpreter_agent,
         manager_agent,
         agent_map,
-        user_proxy_agent
+        user_proxy_agent,
+        conversation_agent
     )
     chat_interface.launch(server_name=server_name, share=False)
