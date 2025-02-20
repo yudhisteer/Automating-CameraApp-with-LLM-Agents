@@ -35,7 +35,7 @@ Input: "Set automatic framing to on"
 
 TYPE: TASK
 ITERATIONS: 1
-QUERY: ensure autoframing is off then turn on autoframing
+QUERY: turn on autoframing
 
 Example 4:
 Input: "Take video for 10 seconds"

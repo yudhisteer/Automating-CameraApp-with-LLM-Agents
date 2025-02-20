@@ -343,22 +343,79 @@ def process_message(message: str, chat_history, interpreter_agent, manager_agent
 def create_chat_interface(
     interpreter_agent, manager_agent, agent_map, user_proxy_agent
 ):
-    """Create and configure the Gradio chat interface."""
-    with gr.Blocks() as chat_interface:
-        chatbot = gr.Chatbot(
-            show_label=False, height=600, bubble_full_width=False, type="messages"
+    """Create and configure the Gradio chat interface with enhanced styling."""
+    
+    # Custom CSS for better aesthetics
+    custom_css = """
+        .container {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+        }
+        .chat-message {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 5px 0;
+        }
+        .user-message {
+            background-color: #e3f2fd;
+        }
+        .bot-message {
+            background-color: #f5f5f5;
+        }
+        .input-container {
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+    """
+
+    with gr.Blocks(css=custom_css) as chat_interface:
+        gr.Markdown(
+            """
+            # AI Assistant Chat
+            Welcome! I'm here to help you with your queries. Type your command below to get started.
+            """,
+            elem_classes="container"
         )
 
-        with gr.Row():
-            msg = gr.Textbox(
-                label="Your command",
-                placeholder="Type your command here...",
-                show_label=True,
-                scale=4,
-            )
-            submit = gr.Button("Send", scale=1)
+        chatbot = gr.Chatbot(
+            show_label=False,
+            height=500,
+            bubble_full_width=False,
+            type="messages",
+            elem_classes=["chat-message", "container"],
+            render=False,
+        )
 
-        clear = gr.ClearButton([msg, chatbot])
+        with gr.Row(elem_classes="input-container"):
+            with gr.Column(scale=4):
+                msg = gr.Textbox(
+                    label="Message",
+                    placeholder="Type your message here...",
+                    show_label=False,
+                    container=False,
+                    scale=1,
+                    min_width=600,
+                )
+            
+            with gr.Column(scale=1, min_width=100):
+                submit = gr.Button(
+                    "Send",
+                    variant="primary",
+                    size="lg",
+                )
+
+        with gr.Row():
+            clear = gr.ClearButton(
+                [msg, chatbot],
+                variant="secondary",
+                size="sm",
+                value="Clear chat"
+            )
+
+        # Add some spacing
+        gr.Markdown("<br>")
 
         def respond(message, chat_history):
             if message:
@@ -372,13 +429,14 @@ def create_chat_interface(
                 )
             return "", chat_history
 
+        # Event handlers
         msg.submit(respond, [msg, chatbot], [msg, chatbot])
         submit.click(respond, [msg, chatbot], [msg, chatbot])
 
     return chat_interface
 
 
-def launch_chat(interpreter_agent, manager_agent, agent_map, user_proxy_agent):
+def launch_chat(interpreter_agent, manager_agent, agent_map, user_proxy_agent, server_name="127.0.0.1"):
     """Launch the chat interface."""
     chat_interface = create_chat_interface(
         interpreter_agent,
@@ -386,4 +444,4 @@ def launch_chat(interpreter_agent, manager_agent, agent_map, user_proxy_agent):
         agent_map,
         user_proxy_agent
     )
-    chat_interface.launch(share=False)
+    chat_interface.launch(server_name=server_name, share=False)

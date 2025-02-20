@@ -167,20 +167,12 @@ if __name__ == "__main__":
     # Add arguments
     parser.add_argument("--test_id", type=str, help="Test case ID to run")
     parser.add_argument("--query", type=str, help="Custom query to run")
-    parser.add_argument(
-        "--interactive", action="store_true", help="Launch interactive chat mode"
-    )
-    parser.add_argument(
-        "--list_tests", action="store_true", help="List available test cases"
-    )
-    parser.add_argument(
-        "--save_results", action="store_true", help="Save test results to file"
-    )
-    parser.add_argument(
-        "--force_status",
-        choices=["Pass", "Fail"],
-        help="Force a specific pass/fail status",
-    )
+    parser.add_argument("--interactive", action="store_true", help="Launch interactive chat mode")
+    parser.add_argument("--local", action="store_true", help="Run server locally on 127.0.0.1")
+    parser.add_argument("--ngrok", action="store_true", help="Run server on 0.0.0.0 for ngrok")
+    parser.add_argument("--list_tests", action="store_true", help="List available test cases")
+    parser.add_argument("--save_results", action="store_true", help="Save test results to file")
+    parser.add_argument("--force_status", choices=["Pass", "Fail"], help="Force a specific pass/fail status")
 
     # Parse arguments
     args = parser.parse_args()
@@ -301,7 +293,20 @@ if __name__ == "__main__":
                 json.dump(test_data, f, indent=2)
             print(f"Results saved for test ID {args.test_id}: {test_status}")
 
+    # Determine server name based on arguments
+    server_name = "127.0.0.1"  # default
+    if args.ngrok:
+        server_name = "0.0.0.0"
+    elif args.local:
+        server_name = "127.0.0.1"
+
     # Launch interactive mode if requested or if no other action was specified
     if args.interactive or (not query and not args.list_tests):
-        print("Starting interactive chat mode...")
-        launch_chat(interpreter_agent, manager_agent, agent_map, user_proxy_agent)
+        print(f"Starting interactive chat mode on {server_name}...")
+        launch_chat(
+            interpreter_agent, 
+            manager_agent, 
+            agent_map, 
+            user_proxy_agent,
+            server_name=server_name
+        )
