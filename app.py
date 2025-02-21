@@ -113,6 +113,12 @@ user_proxy_agent = create_user_proxy_agent(
     human_input_mode="NEVER",
 )
 
+conversation_agent = create_assistant_agent(
+    name="conversation_agent",
+    sys_msg="conversation_agent_msg.txt",
+    llm_config=llm_config,
+)
+
 
 if __name__ == "__main__":
 
@@ -308,5 +314,6 @@ if __name__ == "__main__":
             manager_agent, 
             agent_map, 
             user_proxy_agent,
+            conversation_agent,
             server_name=server_name
         )

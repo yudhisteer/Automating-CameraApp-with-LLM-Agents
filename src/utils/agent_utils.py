@@ -318,7 +318,7 @@ def process_message(message: str, chat_history, interpreter_agent, manager_agent
         # Interpret the query
         msg_type, iterations, interpreted_query = interpret_query(message, interpreter_agent)
 
-        if msg_type == "CONVERSATION":
+        if msg_type == "CONVERSATION" or msg_type == "UNCLEAR":
             # Handle the conversation
             response = handle_conversation(message, conversation_agent)
             chat_history.append({"role": "assistant", "content": response})
