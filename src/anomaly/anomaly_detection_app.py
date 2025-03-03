@@ -77,6 +77,7 @@ def process_video(video_path, progress=gr.Progress()):
     
     # Get video properties
     fps = cap.get(cv2.CAP_PROP_FPS)
+
     frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     duration = frame_count / fps
     
@@ -84,7 +85,7 @@ def process_video(video_path, progress=gr.Progress()):
     logger.info(f"FPS: {fps}, Total Frames: {frame_count}, Duration: {duration:.2f}s")
     
     # For MVP, process every 10th frame to reduce API calls
-    sample_rate = 10
+    sample_rate = 30
     logger.info(f"Processing every {sample_rate} frame(s)")
     
     # Initialize results storage
@@ -187,22 +188,22 @@ def analyze_video(video_file, progress=gr.Progress()):
         summary += f"Maximum confidence score: {max_confidence:.2f}\n"
         summary += f"Average confidence score: {avg_confidence:.2f}"
     
-    return video_path, plot_path, summary
+    return plot_path, summary
 
 # Create the Gradio interface
-with gr.Blocks(title="Video Anomaly Detector") as app:
-    gr.Markdown("## Video Anomaly Detector")
-    gr.Markdown("Upload a video to analyze for anomalies using computer vision.")
+with gr.Blocks(title="Camera App Anomaly Detector") as app:
+    gr.Markdown("## Camera App Anomaly Detector")
+    gr.Markdown("Upload a video to analyze for anomalies.")
     
     with gr.Row():
-        video_input = gr.Video(label="Upload Video")
+        video_input = gr.Video(label="Upload Video", width=400, height=400)
     
     with gr.Row():
         analyze_button = gr.Button("Analyze Video")
     
     with gr.Row():
-        with gr.Column():
-            video_output = gr.Video(label="Video")
+        # with gr.Column():
+        #     video_output = gr.Video(label="Video")
         with gr.Column():
             plot_output = gr.Image(label="Anomaly Confidence Over Time")
     
@@ -212,7 +213,7 @@ with gr.Blocks(title="Video Anomaly Detector") as app:
     analyze_button.click(
         fn=analyze_video,
         inputs=[video_input],
-        outputs=[video_output, plot_output, summary_output]
+        outputs=[plot_output, summary_output]
     )
 
 # Launch the app
