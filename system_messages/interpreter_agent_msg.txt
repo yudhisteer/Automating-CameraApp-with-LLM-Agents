@@ -30,6 +30,22 @@ TYPE: CONVERSATION
 ITERATIONS: 1
 QUERY: Can you list all test cases?
 
+Example 0:
+Input: "Switch to RFC"
+
+TYPE: CONVERSATION
+ITERATIONS: 1
+QUERY: Switch to Rear Facing Camera (RFC)
+
+Example 0:
+Input: "Switch to FFC"
+
+TYPE: CONVERSATION
+ITERATIONS: 1
+QUERY: Switch to Front Facing Camera (FFC)
+
+
+
 
 
 Example 1:
